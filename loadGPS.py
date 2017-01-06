@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-# -*- coding: utf-8 -*-
+
 """
 @author: Vicente Yáñez
 @date: Diciembre 2016
@@ -9,9 +9,10 @@ Funciones relacionadas a cargar y modificar series de tiempo GPS
 
 import os
 import numpy as np
+import pdb
 
 
-def limpiar_serie(serie, err_max=10):
+def _limpiar_serie(serie, err_max=10):
     """
     Funcion que limpia las mediciones dentro de una serie de tiempo
     con un error mayor al predefinido
@@ -19,16 +20,15 @@ def limpiar_serie(serie, err_max=10):
     serie_limpia = []
     for i, med in enumerate(serie):
         # transformacion de string a float
-        err_e = serie[i][5].astype(np.float)
-        err_n = serie[i][6].astype(np.float)
-        err_z = serie[i][7].astype(np.float)
-
+        err_e = serie[i][4]
+        err_n = serie[i][5]
+        err_z = serie[i][6]
         if (err_e < err_max and err_n < err_max and err_z < err_max):
             serie_limpia.append(serie[i])
     return serie_limpia
 
 
-def extraer_tiempo(serie, intervalo):
+def _extraer_tiempo(serie, intervalo):
     """
     Función que corta la serie para un intervalo definido
     Input:
@@ -37,7 +37,7 @@ def extraer_tiempo(serie, intervalo):
     """
     serie2 = []
     for i, med in enumerate(serie):
-        t_serie = serie[i][1].astype(np.float)
+        t_serie = serie[i][0]
         if t_serie > intervalo[0] and t_serie < intervalo[1]:
             serie2.append(serie[i])
     return np.array(serie2)
@@ -70,10 +70,9 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
                         8. Error Vertical
     """
     # Carga de lista de estaciones
-    estaciones = np.loadtxt(estac_list, usecols=[0],
-                            dtype=str, skiprows=1)
-    lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1)
-    lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1)
+    estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
+    lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
+    lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1, dtype=float)
 
     # array para guardar datos
     data = np.array([])
@@ -84,6 +83,7 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
     # CICLO DE CARGA
     # ###################################################################
     for i, estacion in enumerate(estaciones):
+        estacion = estacion.decode('utf-8')
         # ###################################################
         # Seleccion por area
         if lat_est[i] < lat[0] or lat_est[i] > lat[1]:
@@ -99,7 +99,6 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
         if ((os.path.isfile(dir_estac) is False)):
             print("Faltan archivos de {}".format(estacion))
             continue
-
         # verifica que estacion i tenga un tamaño minimo
         stinfo = os.stat(dir_estac)
         if stinfo.st_size > 60:
@@ -107,7 +106,6 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
             data_estac = np.loadtxt(dir_estac,
                                     usecols=(1, 2, 3, 4, 5, 6, 7, 8),
                                     dtype=float)
-            estacion = [estaciones[i]]*len(data_estac.T[0])
             # carga de datos
             year = data_estac.T[0]
             dias = data_estac.T[1] / 365.25
@@ -121,35 +119,29 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
 
         # nota: python pasa los valores a string en esta operacion
         # corregir usando .astype(np.float).T
-        data_temp = np.array([estacion, tiempo,
-                              desp_e, desp_n, desp_u,
-                              desp_e_err,
-                              desp_n_err,
-                              desp_u_err],
-                             dtype='str').T
+        data_temp = np.array([tiempo, desp_e, desp_n, desp_u, desp_e_err,
+                              desp_n_err, desp_u_err]).T
         # limpiar datos
-        data_temp_limpia = limpiar_serie(data_temp)
-        data_temp2 = extraer_tiempo(data_temp_limpia, intervalo)
+        data_temp_limpia = _limpiar_serie(data_temp)
+        data_temp2 = _extraer_tiempo(data_temp_limpia, intervalo)
 
         # si se tienen menos de 10 mediciones descarta la estacion
         if len(data_temp2) < 10:
+            print("Pocos datos para estacion {}".format(estacion))
             continue
 
-        # array con el nombre de la estacion de longitud nº estaciones
-        lista_estac.append([estaciones[i], lon_est[i], lat_est[i]])
+        data_temp2 = list(data_temp2.T)
+
+        lista_estac.append([estacion, lon_est[i], lat_est[i]])
 
         # la primera vez data = data_temp, luego va apilando
         if data_vacio:
-            data = data_temp2
+            data = [[estacion, data_temp2]]
             data_vacio = False
         else:
-            data = np.vstack((data, data_temp2))
+            data.append([estacion, data_temp2])
 
-    # ###################################################################
-    # OUTPUT
-    # ##################################################################
-    lista_final = np.array(lista_estac)
-    return data, lista_final
+    return data, lista_estac
 
 
 def carga_modelo(lon, lat, intervalo, estac_list, path_modelo):
