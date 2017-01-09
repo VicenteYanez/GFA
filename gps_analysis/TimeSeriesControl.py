@@ -39,8 +39,10 @@ class TimeSeriesControl():
     def __init__(self, codigo, lista_estac, dir_series, save_dir):
         self.dir_series = dir_series
         self.lista_estac = lista_estac
-        self.savedir = save_dir
+        self.savedir = '{}{}/'.format(save_dir, codigo)
         self.codigo = codigo
+
+        os.mkdir(self.savedir)
 
     def load_estations(self, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
         """
@@ -48,10 +50,11 @@ class TimeSeriesControl():
         pedidas
         1. Carga el area y el intervalo de tiempo pedido por el usuario.
         2. Pide la selección de las estaciones
-        3. Pide la info de la solucion a la DB.
 
         Input
-        Codigo    : Identificador de consulta, puede ser cualquier string
+        lon_min, lon_max    : Rango de longitud solicitado
+        lat_min, lat_max    : Rango de latitud solicitado
+        tmin, tmax          : Rango de tiempo pedido
 
         Output
         nombre    : array-like con nombre de estaciones
@@ -75,14 +78,23 @@ class TimeSeriesControl():
         """
         Guarda los datos cargados por load_estation
         """
+        lista_estac = np.array(self.lista).T
+        # guardar lista de estaciones
+        np.savetxt('{}lista_estaciones.txt'.format(self.savedir), self.lista,
+                   fmt='%s')
+
         # Crear directorio para almacenar los resultados
-        save_dir = '{}{}_series/'.format(self.savedir, self.codigo)
-        os.mkdir(save_dir)
+        save_series = '{}series/'.format(self.savedir)
+        os.mkdir(save_series)
 
         # ciclos para extraer y guardar datos de cada estacion
+        head = 'time[yr], Desp[mm] Est, North, Vertical, Err[mm] Est, North,\
+Vertical'
         for estacion in self.data:
             save = np.array(estacion[1]).T
-            np.savetxt('{}{}.txt'.format(save_dir, estacion[0]), save, fmt='%s')
+            np.savetxt('{}{}.txt'.format(save_series, estacion[0]), save,
+                       fmt='%s',
+                       header=head)
         return
 
     def to_graph(self, codigo, estacion, *recta):

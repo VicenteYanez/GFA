@@ -32,9 +32,9 @@ t2 = fun_tools.toYearFraction(t2.year, t2.month, t2.day)
 
 # path archivos
 dir_path = os.path.dirname(os.path.realpath(__file__))
-lista_gps = '{}/data/SeriesTiempo/pos_jc'.format(dir_path)
-series_dir = '{}/data/SeriesTiempo/JC/'.format(dir_path)
-save_dir = '{}/example_files/'.format(dir_path)
+lista_gps = '{}/../data/SeriesTiempo/pos_jc'.format(dir_path)
+series_dir = '{}/../data/SeriesTiempo/JC/'.format(dir_path)
+save_dir = '{}/../example_files/'.format(dir_path)
 
 ts = TimeSeriesControl(codigo, lista_gps, series_dir, save_dir)
 ts.load_estations(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
