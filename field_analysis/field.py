@@ -4,8 +4,7 @@
 @author: vicente
 @date: December 2016
 
-Conjunto de funciones relacionadas al campo
-de velocidad.
+Set of functions related with the velocity field
 """
 
 import numpy as np
@@ -13,12 +12,16 @@ import numpy as np
 
 def triangular_gradient(ux, uy, x, y, ele):
     """"
-    Funcion que calcula el gradiente de una malla
-    construida con el software triangle.
-    Requiere que archivo .ele y .node esten en la misma carpeta
+    Function that calculate the gradient in a mesh, build with
+    triangle software
+    Need that the .ele and .node files are in the same directory.
 
-    Input: nombre de archivo .ele (1d narray)
-    Output: ux/dx, ux/dy, uy/dx, uy/dy
+    Input:
+        ux, uy : velocity in the x and y axis
+        x, y   : triangular mesh
+        ele: path of the .ele file
+    Output:
+        ux/dx, ux/dy, uy/dx, uy/dy
     """
 
     # cargar datos de archivo. ele
@@ -84,15 +87,14 @@ def triangular_gradient(ux, uy, x, y, ele):
 
 def velocitytensor_2d(uxdx, uxdy, uydx, uydy):
     """
-    Funcion que calcula los tensores de elongacion y vorticidad
-    a partir de los gradientes de velocidad para dos dimensiones
+    Function that calculates the elongation and vorticity tensors,
+    from the velocity gradients for two dimensions.
 
-    Los tensores devueltos tienen la siguiente forma
+    The returning tensors have this form
 
-    S = S11 S12
-        S21 S22
-
-    donde Sxx corresponde a un array.
+    T = T11 T12
+        T21 T22
+    where Txy correspond to T[x][y]
     """
     # convierte input a array
     uxdx = np.array(uxdx)
@@ -110,15 +112,15 @@ def velocitytensor_2d(uxdx, uxdy, uydx, uydy):
 
 def velocitytensor_3d(uxdx, uxdy, uxdz, uydx, uydy, uydz, uzdx, uzdy, uzdz):
     """
-    Funcion que calcula los tensores de elongacion y vorticidad
-    a partir de los gradientes de velocidad para dos dimensiones
+    Function that calculates the elongation and vorticity tensors,
+    from the velocity gradients for tree dimensions.
 
-    Los tensores devueltos tienen la siguiente forma
+    The returning tensors have this form
 
-    S = S11 S12
-        S21 S22
-
-    donde Sxx corresponde a un array.
+    S = S11 S12 S13
+        S21 S22 S23
+        S31 S32 S33
+    where Txy correspond to T[x][y]
     """
     # convierte input a array
     uxdx = np.array(uxdx)
@@ -144,7 +146,7 @@ def velocitytensor_3d(uxdx, uxdy, uxdz, uydx, uydy, uydz, uzdx, uzdy, uzdz):
 
 def vertical_vorticity2d(tensorW):
     """
-    Calcula el vector de vorticidad a partir del tensor de vorticidad de 2d
+    Calculate the vorticity vector from the vorticity tensor in two dimension
     """
     wz = 2*tensorW[1][0]
     return wz
@@ -152,8 +154,8 @@ def vertical_vorticity2d(tensorW):
 
 def vorticity_vector3d(tensorW):
     """
-    Calcula el vector de vorticidad a partir del tensor de vorticidad de 3d.
-    También calcula la longitud del vector.
+    Calculate the vorticity vector from the vorticity tensor in
+    tree dimensions
     """
     w = 2*np.array([tensorW[2][1], tensorW[0][2], tensorW[1][0]])
 
@@ -190,12 +192,11 @@ def principal_stress(tensor):
 
 def clean_array(array_pp, value_min, value_max, param_=()):
     """
-    Funcion que reemplaza por nan los valores de array_pp
-    que esten fuera del rango value_min - value_max.
+    Function that replace with nan, the values of array_pp that
+    are outside the interval value_min - value_max
 
-    Opcionalmente se puede incorporar una o mas listas/arrays
-    para realizar la misma operacion en los mismos indices de
-    array_pp
+    Optionally, you can give one o more list or numpy.arrays to
+    remove the same indices of array_pp
     """
     # copia de arrays entregados para evitar modificacion de mutables
     copy_app = array_pp[:]

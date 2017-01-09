@@ -1,11 +1,11 @@
 #! /usr/bin/python3
 
 """
-@author: vicente
+@author: vicente yanez
 @date: December 2016
 
-Conjunto de funciones relacionadas a la geometria, proyeccion
-y al sistema de referencia
+Set of functions related with geometry, projection and the geografic
+reference system
 """
 
 import numpy as np
@@ -14,10 +14,9 @@ import math
 
 def rotar_sistema2d(x, y, degrees):
     """
-    Rota los array a un nuevo sistema de
-    referenicia.
-    Degrees: positivo, rotacion antihorario
-             negativo, rotación horario
+    Rotate the data(x, y) to a new reference system
+    Degrees: + clockwise
+             - counterclockwise
     """
     omega = np.radians(degrees)
     R = [[np.cos(omega), -np.sin(omega)], [np.sin(omega), np.cos(omega)]]
@@ -29,9 +28,9 @@ def rotar_sistema2d(x, y, degrees):
 
 def geo2proj(x, y, x0, y0):
     """
-    Proyecta coordenadas geograficas usando vinc
-    x, y : malla
-    x0, y0 : origen en coordenadas geograficas
+    Project the geografic coordinates using the vinc's function
+    x, y : mesh
+    x0, y0 : origin geografic coordinates
     """
     if len(y) and len(x) > 1:
         dy = list(range(len(y)))
@@ -49,7 +48,7 @@ def geo2proj(x, y, x0, y0):
         xi = Dla*np.cos(90) + Dlo*np.sin(90)
         yi = Dla*np.sin(90) - Dlo*np.cos(90)
     else:
-        print("Malla de un solo punto")
+        print("Mesh have only one point")
         xi = x
         yi = y
 
@@ -358,7 +357,6 @@ def vinc_pt(phi1, lembda1, alpha12, s):
 
 def est_dist(phi1,  lembda1,  phi2,  lembda2):
     """
-
     Returns an estimate of the distance between two geographic points
     This is a quick and dirty vinc_dist
     which will generally estimate the distance to within 1%
