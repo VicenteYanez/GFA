@@ -14,13 +14,14 @@ import numpy as np
 
 from loadGPS import format_csn
 import graficar_serie
-import fun_tools
 import fun_vector
 
 
 class TimeSeriesControl():
     """
-    Clase con los metodos necesarios para cargar y graficar series de tiempo
+    Clase con los metodos necesarios para cargar y graficar series de tiempo.
+
+    Pensada para trabajar con bases de datos de muchas series de tiempo
 
     Para iniciar necesita la un archivo txt con la ubicacion
     de las estaciones, el directorio con las series de tiempo y
@@ -41,6 +42,7 @@ class TimeSeriesControl():
         self.lista_estac = lista_estac
         self.savedir = '{}{}/'.format(save_dir, codigo)
         self.codigo = codigo
+        self.clas = 'series'
 
         os.mkdir(self.savedir)
 
@@ -80,11 +82,11 @@ class TimeSeriesControl():
         """
         lista_estac = np.array(self.lista).T
         # guardar lista de estaciones
-        np.savetxt('{}lista_estaciones.txt'.format(self.savedir), self.lista,
-                   fmt='%s')
+        np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
+                   self.lista, fmt='%s')
 
         # Crear directorio para almacenar los resultados
-        save_series = '{}series/'.format(self.savedir)
+        save_series = '{}{}/'.format(self.savedir, self.clas)
         os.mkdir(save_series)
 
         # ciclos para extraer y guardar datos de cada estacion

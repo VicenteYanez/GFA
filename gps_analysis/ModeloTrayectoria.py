@@ -1,5 +1,5 @@
-#! /usr/bin/python
-# -*- coding: utf-8 -*-
+#! /usr/bin/python3
+
 """
 @author: Vicente Yáñez
 @date: Primer semestre 2016
@@ -88,11 +88,11 @@ class ModeloTrayectoria():
         """
         # verifica que fperiods no este vacio
         if not self.n:
-            print "No se ha asignado n. Modelo de trajectoria vacio"
+            print("No se ha asignado n. Modelo de trajectoria vacio")
             return self.AT
         else:
             if type(self.n) != int and self.n < 0 or self.n > 6:
-                print "Error, n debe ser un entero entre 0 y 6"
+                print("Error, n debe ser un entero entre 0 y 6")
                 return
             m = len(self.t)
             self.AT = np.ones((m, self.n+1))
@@ -108,7 +108,7 @@ class ModeloTrayectoria():
         Necesita que tjmp no este vacio
         """
         if not self.tjump.any():
-            print "No se han incorporados saltos"
+            print("No se han incorporados saltos")
             return self.AJ
         else:
             n = len(self.t)
@@ -126,7 +126,7 @@ class ModeloTrayectoria():
         """
         # verifica que fperiods no este vacio
         if not self.fperiods.any():
-            print "No se ha entregado periodo de oscilaciones"
+            print("No se ha entregado periodo de oscilaciones")
             return self.AF
         else:
             m = len(self.t)
@@ -149,7 +149,7 @@ class ModeloTrayectoria():
         Necesita las variables de clase tlt y tsc
         """
         if not self.tlt.any() or not self.tsc.any():
-            print "tlt o tsc esta vacio"
+            print("tlt o tsc esta vacio")
             return
         else:
             nl = len(self.tlt)
@@ -162,7 +162,8 @@ class ModeloTrayectoria():
                                           self.tsc[i])
 
     def modelo_trayectoria(self, y):
-        """Metodo que se encarga de solucionar el modelo de trayectorias
+        """
+        Metodo que se encarga de solucionar el modelo de trayectorias
         usando solucion de los minimos cuadrados.
         Primero construye el array len(t) x num_parametros que es necesario
         para llamar a la funcion que resuelve los minimos cuadrados.
@@ -171,12 +172,12 @@ class ModeloTrayectoria():
         modelo = []
         # verifica que no este vacio
         if not self.n:
-            print "No se ha asignado n. Modelo de trayectoria vacio"
+            print("No se ha asignado n. Modelo de trayectoria vacio")
         else:
             self.trend()
             modelo = self.AT
         if not self.tjump.any():
-            print "No se han incorporados saltos"
+            print("No se han incorporados saltos")
         else:
             self.jump()
             # en caso de que no se haya asignado un valor previamente
@@ -185,7 +186,7 @@ class ModeloTrayectoria():
             else:
                 modelo = np.hstack((modelo, self.AJ))
         if not self.fperiods.any():
-            print "No se ha entregado periodo de oscilaciones"
+            print("No se ha entregado periodo de oscilaciones")
         else:
             self.cycle()
             if not modelo.any():
@@ -193,7 +194,7 @@ class ModeloTrayectoria():
             else:
                 modelo = np.hstack((modelo, self.AF))
         if not self.tlt.any() or not self.tsc.any():
-            print "tlt o tsc esta vacio"
+            print("tlt o tsc esta vacio")
         else:
             self.lgt()
             if not modelo.any():
@@ -258,7 +259,7 @@ class ModeloTrayectoria():
             velocidad_z = ((modelo[2][idx+1] - modelo[2][idx]) /
                            (self.t[idx+1]-self.t[idx]))
 
-        print "Velocidad de ", estac, " es ", velocidad_e[0], velocidad_n[0]
+        print("Velocidad de ", estac, " es ", velocidad_e[0], velocidad_n[0])
 
         return velocidad_e[0], velocidad_n[0], velocidad_z[0]
 
@@ -272,7 +273,7 @@ class ModeloTrayectoria():
         id_t = (self.t >= tiempo1) & (self.t <= tiempo2)
         t = self.t[id_t]
         if len(t) < 10:
-            print "Estacion sin datos para calcular una vel media"
+            print("Estacion sin datos para calcular una vel media")
             return
         desp_e = modelo[0][id_t]
         desp_n = modelo[1][id_t]

@@ -58,16 +58,19 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
         path_series :   directorio donde estan las series de tiempo
 
     Output:
-    data        :   array de 2d, de longitud num medidas x 7
-                    Columna
-                        1. Nombre estacion
-                        2. tiempo
-                        3. Desplazamiento Este
-                        4. Desplazamiento Norte
-                        5. Desplazamiento Vertical
-                        6. Error Este
-                        7. Error Norte
-                        8. Error Vertical
+    data        :   list = lenght x nº of stations
+                    list[0] : ['name estation', [0, ..., 6]]
+                    Where 0 to 6:
+                        0. time
+                        1. East desplacement
+                        2. North desplacement
+                        3. Vertical desplacement
+                        4. East Error
+                        5. North Error
+                        6. Vertical Error
+                    example:
+                        list[4][1][2] : north desplacment of station number 4
+                        list[4][0]    : name of station number 4
     """
     # Carga de lista de estaciones
     estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
