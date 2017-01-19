@@ -1,2 +1,3 @@
-# GFA
-GPS Field Analysis : Python's scripts for analysis of a velocity field using Davis &amp; Titus (2011) paper.
+# GPS Field Analysis (GFA)
+
+The program have the functions to calculate vectors from a gps time series data (from the trajectory model of Bevis & Brown, 2014 or from a simple lineal fitting) and with this, obtain a velocity field that represent the cortical deformation. After, from the velocity field this program include the tools to calculate the velocity tensor, and from this, the vorticity and stretching tensors (from the equation of Davis & Titus, 2011).
