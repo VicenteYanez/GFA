@@ -4,8 +4,8 @@
 @date: 2016
 Universidad de Concepción
 
-Script que genera el modelo para todos las estaciones con los mismos
-parametros.
+Calculate the trajectory model for all the stations using the same
+parameters
 """
 
 import os
@@ -26,6 +26,6 @@ lon = [-180, 180]
 lat = [-90, 90]
 t = [1950, 2050]
 
-model = ModelControl('1701', lista_gps, series_dir, save_dir)
+model = ModelControl('general_solution', lista_gps, series_dir, save_dir)
 data, lista = model.load_estations(lon[0], lon[1], lat[0], lat[1], t[0], t[1])
 model.build_model_all(1, [1], eq_file)

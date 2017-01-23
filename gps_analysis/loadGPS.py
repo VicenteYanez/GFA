@@ -4,7 +4,7 @@
 @author: Vicente Yáñez
 @date: Diciembre 2016
 
-Funciones relacionadas a cargar y modificar series de tiempo GPS
+Set of functions to load and modify GNSS time series
 """
 
 import os
@@ -12,7 +12,7 @@ import numpy as np
 import pdb
 
 
-def _limpiar_serie(serie, err_max=10):
+def clean_serie(serie, err_max=10):
     """
     Funcion que limpia las mediciones dentro de una serie de tiempo
     con un error mayor al predefinido
@@ -28,7 +28,7 @@ def _limpiar_serie(serie, err_max=10):
     return serie_limpia
 
 
-def _extraer_tiempo(serie, intervalo):
+def select_time(serie, intervalo):
     """
     Función que corta la serie para un intervalo definido
     Input:
@@ -45,21 +45,22 @@ def _extraer_tiempo(serie, intervalo):
 
 def format_csn(lon, lat, intervalo, estac_list, path_series):
     """
-    Metodo que carga todas las series de tiempo con el formato del CSN.
-    Entrega array con lista de nombres de estaciones.
+    Function that load all the time series in a directory. Returns one list
+    with the data and other list with the name of stations and his locations.
+    The method can only load the data if they are in the format giving for
+    the Centro Sismologico Nacional (CSN).
+    ### Input
+    * lon: [list] with the min and maximum value of longitude.
+    * lat: [list] with the min and maximun value of latitude.
+    * intervalo: with the min and maximun value of time (in years).
+    * estac_list: [str] with the path to a text file with the name and
+    geographic coordinates of each stations.
+    * path_series [str] with the path to a directory that have the
+    time series's file.
+    ### Output
+    * data = lenght x nº of stations
 
-    format      :   nombre  año dia eje(lon,lat,z), errores (lon, lat, z)
-
-    Input
-        lon         :   array-lide [lon min, lon max]
-        lat         :   array-like [lat min, lat max]
-        intervalo   :   array-like [tiempo min, tiempo max]
-        estac_list  :   archivo txt con el nombre y ubicacion de cada estacion
-        path_series :   directorio donde estan las series de tiempo
-
-    Output:
-    data        :   list = lenght x nº of stations
-                    list[0] : ['name estation', [0, ..., 6]]
+                    data[0] : ['name estation', [0, ..., 6]]
                     Where 0 to 6:
                         0. time
                         1. East desplacement
@@ -71,11 +72,13 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
                     example:
                         list[4][1][2] : north desplacment of station number 4
                         list[4][0]    : name of station number 4
+    * list_estations: [list] with the name, longitude and latitude
+    for each station.
     """
     # Carga de lista de estaciones
     estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
-    lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
     lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1, dtype=float)
+    lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
 
     # array para guardar datos
     data = np.array([])
@@ -125,8 +128,8 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
         data_temp = np.array([tiempo, desp_e, desp_n, desp_u, desp_e_err,
                               desp_n_err, desp_u_err]).T
         # limpiar datos
-        data_temp_limpia = _limpiar_serie(data_temp)
-        data_temp2 = _extraer_tiempo(data_temp_limpia, intervalo)
+        data_temp_limpia = clean_serie(data_temp)
+        data_temp2 = select_time(data_temp_limpia, intervalo)
 
         # si se tienen menos de 10 mediciones descarta la estacion
         if len(data_temp2) < 10:
@@ -147,7 +150,96 @@ def format_csn(lon, lat, intervalo, estac_list, path_series):
     return data, lista_estac
 
 
-def carga_modelo(lon, lat, intervalo, estac_list, path_modelo):
+def format_model(lon, lat, intervalo, estac_list, path_series):
+    """
+    Similar to format_csn but load the trajectory model instead.
+    ### Input
+    * lon: [list] with the min and maximum value of longitude.
+    * lat: [list] with the min and maximun value of latitude.
+    * intervalo: with the min and maximun value of time (in years).
+    * estac_list: [str] with the path to a text file with the name and
+    geographic coordinates of each stations.
+    * path_series [str] with the path to a directory that have the
+    time series's file.
+    ### Output
+    * data = lenght x nº of stations
+
+                    data[0] : ['name estation', [0, ..., 6]]
+                    Where 0 to 6:
+                        0. time
+                        1. East desplacement
+                        2. North desplacement
+                        3. Vertical desplacement
+                    example:
+                        list[4][1][2] : north desplacment of station number 4
+                        list[4][0]    : name of station number 4
+    * list_estations: [list] with the name, longitude and latitude
+    for each station.
+    """
+    # Carga de lista de estaciones
+    estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
+    lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1, dtype=float)
+    lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
+
+    # array para guardar datos
+    data = np.array([])
+    lista_estac = []
+    data_vacio = True
+
+    # ###################################################################
+    # CICLO DE CARGA
+    # ###################################################################
+    for i, estacion in enumerate(estaciones):
+        estacion = estacion.decode('utf-8')
+        # ###################################################
+        # Seleccion por area
+        if lat_est[i] < lat[0] or lat_est[i] > lat[1]:
+            continue
+        if lon_est[i] < lon[0] or lon_est[i] > lon[1]:
+            continue
+        # ###################################################
+
+        # path estacion i, para cada eje
+        dir_estac = "{}{}.txt".format(path_series, estacion)
+
+        # verifica que exista la estacion
+        if ((os.path.isfile(dir_estac) is False)):
+            print("Faltan archivos de {}".format(estacion))
+            continue
+        # verifica que estacion i tenga un tamaño minimo
+        stinfo = os.stat(dir_estac)
+        if stinfo.st_size > 60:
+            # abrir archivos de estacion
+            data_estac = np.loadtxt(dir_estac, usecols=(0, 1, 2, 3),
+                                    dtype=float, skiprows=1)
+            # carga de datos
+            tiempo = data_estac.T[0]
+            desp_e = data_estac.T[1]
+            desp_n = data_estac.T[2]
+            desp_u = data_estac.T[3]
+
+        data_temp = np.array([tiempo, desp_e, desp_n, desp_u]).T
+        # select by time
+        data_temp2 = select_time(data_temp, intervalo)
+
+        # si se tienen menos de 10 mediciones descarta la estacion
+        if len(data_temp2) < 10:
+            print("Pocos datos para estacion {}".format(estacion))
+            continue
+
+        data_temp2 = list(data_temp2.T)
+        lista_estac.append([estacion, lon_est[i], lat_est[i]])
+
+        # la primera vez data = data_temp, luego va apilando
+        if data_vacio:
+            data = [[estacion, data_temp2]]
+            data_vacio = False
+        else:
+            data.append([estacion, data_temp2])
+
+    return data, lista_estac
+
+def load_modelo(lon, lat, intervalo, estac_list, path_modelo):
     """
     Metodo que carga la solucion al modelo de trayectoria
     Entrega array con lista de nombres de estaciones.
@@ -217,7 +309,7 @@ def carga_modelo(lon, lat, intervalo, estac_list, path_modelo):
                               desp_e, desp_n, desp_z],
                              dtype='str').T
         # limpiar datos
-        data_temp2 = extraer_tiempo(data_temp, intervalo)
+        data_temp2 = select_time(data_temp, intervalo)
 
         # si se tienen menos de 10 mediciones descarta la estacion
         if len(data_temp2) < 10:

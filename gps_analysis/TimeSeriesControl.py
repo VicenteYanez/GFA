@@ -12,7 +12,7 @@ import pdb
 
 import numpy as np
 
-from loadGPS import format_csn
+from loadGPS import format_csn, format_model
 import graficar_serie
 import fun_vector
 
@@ -70,7 +70,8 @@ class TimeSeriesControl():
 
         # Carga de datos
         data, lista = format_csn(lon, lat, intervalo, self.lista_estac,
-                                 self.dir_series)
+                                     self.dir_series)
+
         self.data = data
         self.lista = lista
 
@@ -82,8 +83,9 @@ class TimeSeriesControl():
         """
         lista_estac = np.array(self.lista).T
         # guardar lista de estaciones
+        head = 'estation,    longitude,    latitude'
         np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
-                   self.lista, fmt='%s')
+                   self.lista, fmt='%s', header=head)
 
         # Crear directorio para almacenar los resultados
         save_series = '{}{}/'.format(self.savedir, self.clas)

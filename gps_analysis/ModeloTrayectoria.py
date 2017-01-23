@@ -11,9 +11,12 @@ Modificado de script de Matlab de Mike Bevis v1.0 3 Agosto 2010
 Reorganizado para ser usado en servidor andes_3db
 """
 
+import pdb
+
 import numpy as np
-import hvsd as hvsd
 from scipy.optimize import curve_fit
+
+import hvsd as hvsd
 
 
 class ModeloTrayectoria():
@@ -228,6 +231,7 @@ class ModeloTrayectoria():
         res_nl = np.array(res_nl)
 
         self.resultado = [res_nt, res_nj, res_nf, res_nl]
+        self.total = res_nt.T[0] + res_nj.T[0] + res_nf.T[0] + res_nl.T[0]
 
         return self.resultado, residual
 
@@ -297,7 +301,7 @@ class ModeloTrayectoria():
                 pva_e[1], pva_n[1], pva_z[1],
                 err_e[0], err_n[0], err_z[0])
 
-    def guardar_modelo(self, dir_mod, estac, eje):
+    def save_components(self, dir_mod, estac, eje):
         """
         Guarda el modelo obtenido, requiere haber construido el modelo
         previamente
@@ -314,19 +318,14 @@ class ModeloTrayectoria():
         nf_guardar = []
         nl_guardar = []
         nj_guardar = []
-        res_total = (self.resultado[0] + self.resultado[1] +
-                     self.resultado[2] + self.resultado[3])
 
         # formatear array para guardado
         for i in range(len(self.t)):
-            array_guardado.append([self.t[i], res_total[i][0]])
             nt_guardar.append([self.t[i], self.resultado[0][i]])
             nj_guardar.append([self.t[i], self.resultado[1][i]])
             nf_guardar.append([self.t[i], self.resultado[2][i]])
             nl_guardar.append([self.t[i], self.resultado[3][i]])
 
-        # desplazamiento modelo entero
-        np.savetxt(dir_mod+estac+eje+'.txt', array_guardado, '%12.8f')
         # desplazamiento modelo por partes
         np.savetxt(dir_mod+'comp/'+estac+eje+'_nt.txt', nt_guardar, '%12.8f')
         np.savetxt(dir_mod+'comp/'+estac+eje+'_nj.txt', nj_guardar, '%12.8f')

@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 """
 @author: Vicente Yáñez
-@date: Primer semestre 2016
+@date: 2017
 Universidad de Concepción
 
 Script que corre para crear la lista de estaciones
@@ -13,6 +13,7 @@ import numpy as np
 import pdb
 
 from TimeSeriesControl import TimeSeriesControl
+from ModelControl import ModelControl
 
 codigo = str(sys.argv[1])
 lon_min = float(sys.argv[2])
@@ -35,7 +36,15 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 lista_gps = '{}/../data/SeriesTiempo/pos_jc'.format(dir_path)
 series_dir = '{}/../data/SeriesTiempo/JC/'.format(dir_path)
 save_dir = '{}/../example_files/'.format(dir_path)
+# optional: dir of the trajectory model
+model_dir = '{}/../example_files/general_solution/Modelo/'.format(dir_path)
+m_ls = '{}/../example_files/{}/series_lista.txt'.format(dir_path, codigo)
 
 ts = TimeSeriesControl(codigo, lista_gps, series_dir, save_dir)
 ts.load_estations(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
 ts.savedata()
+
+# optional: if you have a trajectory model you can load the same way
+model = ModelControl(codigo, m_ls, model_dir, save_dir)
+model.load_model(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
+model.savedata()
