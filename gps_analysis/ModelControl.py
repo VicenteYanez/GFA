@@ -288,7 +288,10 @@ class ModelControl(TimeSeriesControl):
         return
 
     def _load_events(self, name_est, earthq_file):
-
+        """
+        Function that calculate the jumps, tlt and tsc of the trajectory
+        model, based in the config file earq_file.txt
+        """
         # posicion de estacion
         try:
             lon_estacion = [x[:][1] for x in self.lista if x[:][0] == name_est]
