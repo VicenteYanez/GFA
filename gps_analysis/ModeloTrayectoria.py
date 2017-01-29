@@ -77,9 +77,6 @@ class ModeloTrayectoria():
         self.AJ = np.array([])
         self.AL = np.array([])
 
-    def fun_lineal(self, x, b, c):
-        return x * b + c
-
     def trend(self):
         """ Crea el array AT que es el componente trend del modelo de
         trayectoria.
@@ -234,72 +231,6 @@ class ModeloTrayectoria():
         self.total = res_nt.T[0] + res_nj.T[0] + res_nf.T[0] + res_nl.T[0]
 
         return self.resultado, residual
-
-    def velocidad_tangente(self, estac, modelo, momento_vel):
-        """
-        Funcion que obtiene velocidades del modelo en un instante determinado
-        Requiere haber corrido previamente la funcion modelo_trayectoria
-        """
-        # Si la serie no contiene el tiempo momento_vel, regresa falso
-        if self.t[len(self.t)-1] < momento_vel:
-            return "False"
-        # evalua la velocidad en base a los dos puntos mas cercanos del modelo
-        idx = (np.abs(self.t-momento_vel)).argmin()
-
-        # dependiendo de la posicion de idx, considera el punto mas cercano
-        # a la izquierda o a la derecha
-        if idx-1 > 0:
-            velocidad_e = ((modelo[0][idx] - modelo[0][idx-1]) /
-                           (self.t[idx]-self.t[idx-1]))
-            velocidad_n = ((modelo[1][idx] - modelo[1][idx-1]) /
-                           (self.t[idx]-self.t[idx-1]))
-            velocidad_z = ((modelo[2][idx] - modelo[2][idx-1]) /
-                           (self.t[idx]-self.t[idx-1]))
-        else:
-            velocidad_e = ((modelo[0][idx+1] - modelo[0][idx]) /
-                           (self.t[idx+1]-self.t[idx]))
-            velocidad_n = ((modelo[1][idx+1] - modelo[1][idx]) /
-                           (self.t[idx+1]-self.t[idx]))
-            velocidad_z = ((modelo[2][idx+1] - modelo[2][idx]) /
-                           (self.t[idx+1]-self.t[idx]))
-
-        print("Velocidad de ", estac, " es ", velocidad_e[0], velocidad_n[0])
-
-        return velocidad_e[0], velocidad_n[0], velocidad_z[0]
-
-    def velocidad_periodo(self, modelo, tiempo1, tiempo2):
-        """
-        Realiza un ajuste lineal para medir la velocidad en un intervalo
-        de tiempo a partir del modelo
-        """
-
-        # obtiene datos de intervalo de tiempo
-        id_t = (self.t >= tiempo1) & (self.t <= tiempo2)
-        t = self.t[id_t]
-        if len(t) < 10:
-            print("Estacion sin datos para calcular una vel media")
-            return
-        desp_e = modelo[0][id_t]
-        desp_n = modelo[1][id_t]
-        desp_z = modelo[2][id_t]
-
-        desp_e = np.reshape(desp_e, len(desp_e))
-        desp_n = np.reshape(desp_n, len(desp_n))
-        desp_z = np.reshape(desp_z, len(desp_z))
-
-        # ajuste de datos
-        pva_e, cov_e = curve_fit(self.fun_lineal, t, desp_e)
-        pva_n, cov_n = curve_fit(self.fun_lineal, t, desp_n)
-        pva_z, cov_z = curve_fit(self.fun_lineal, t, desp_z)
-
-        err_e = np.sqrt(np.diag(cov_e))
-        err_n = np.sqrt(np.diag(cov_n))
-        err_z = np.sqrt(np.diag(cov_z))
-
-        # retorna pendiente de la recta
-        return (pva_e[0], pva_n[0], pva_z[0],
-                pva_e[1], pva_n[1], pva_z[1],
-                err_e[0], err_n[0], err_z[0])
 
     def save_components(self, dir_mod, estac, eje):
         """

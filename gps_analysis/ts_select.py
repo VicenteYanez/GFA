@@ -38,7 +38,7 @@ series_dir = '{}/../data/SeriesTiempo/JC/'.format(dir_path)
 save_dir = '{}/../example_files/'.format(dir_path)
 # optional: dir of the trajectory model
 model_dir = '{}/../example_files/general_solution/Modelo/'.format(dir_path)
-m_ls = '{}/../example_files/{}/series_lista.txt'.format(dir_path, codigo)
+m_ls = '{}/../example_files/general_solution/resume.txt'.format(dir_path)
 
 ts = TimeSeriesControl(codigo, lista_gps, series_dir, save_dir)
 ts.load_estations(lon_min, lon_max, lat_min, lat_max, tmin, tmax)

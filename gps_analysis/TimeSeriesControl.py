@@ -13,7 +13,6 @@ import pdb
 import numpy as np
 
 from loadGPS import format_csn, format_model
-import graficar_serie
 import fun_vector
 
 
@@ -70,7 +69,7 @@ class TimeSeriesControl():
 
         # Carga de datos
         data, lista = format_csn(lon, lat, intervalo, self.lista_estac,
-                                     self.dir_series)
+                                 self.dir_series)
 
         self.data = data
         self.lista = lista
@@ -100,80 +99,3 @@ Vertical'
                        fmt='%s',
                        header=head)
         return
-
-    def to_graph(self, codigo, estacion, *recta):
-        """
-        Llama a función para crear y un gŕafico de una serie de tiempo.
-        Se puede indicar el nombre de una estacion en vez de tener
-        que leerla desde peticion_graficos.txt
-
-        Los graficos se construyen desde:
-            Tabla estaciones /proj/tmp/tabla_estaciones.txt
-            Series de tiempo /proj/tmp/series/
-            Modelo /proj/tmp/modelo/
-
-        Input
-        Codigo fecha
-
-        Output
-        archivos .jpg guardado en /temp/gps_graficos
-
-        """
-        # ####################################################################
-        # CARGA DATOS
-        # ####################################################################
-        file_serie = self.tmp + codigo + '_series/' + estacion + '.txt'
-        file_modelo = self.tmp + codigo + '_modelo/' + estacion + '.txt'
-        serie = np.loadtxt(file_serie, usecols=range(1, 5)).T
-        modelo = np.loadtxt(file_modelo, usecols=range(1, 5)).T
-
-        # ####################################################################
-        # CONSTRUCCIÓN DEL GRÁFICO
-        # ####################################################################
-        output = self.tmp + codigo + '_gps_graficos/'
-        if os.path.isdir(output) is False:
-            os.mkdir(output)
-        grafico = Grafico(output)
-
-        # Incluye valores de recta si esta fue dada
-        if recta:
-            grafico.graficar(estacion, serie[0], serie[1:4], modelo[1:4],
-                             False, recta)
-        else:
-            grafico.graficar(estacion, serie[0], serie[1:4], modelo[1:4],
-                             False)
-
-        return
-
-    def pedir_descarga(self, codigo):
-        """
-        Agrupa los datos recopilados y trabajados para
-        su descarga.
-        Input:
-            codigo
-        """
-        # Carpetas a guardar
-        dir_serie = codigo + '_series/'
-        dir_vectores = codigo + '_vectores/'
-        dir_graficos = codigo + '_gps_graficos/'
-        file_param = codigo + '_tabla_estaciones.txt'
-
-        # crear zip
-        zipf = zipfile.ZipFile(self.tmp + codigo + '.zip', 'w',
-                               zipfile.ZIP_DEFLATED)
-
-        self._zipdir(self.tmp + dir_serie, dir_serie, zipf)
-        self._zipdir(self.tmp + dir_modelo, dir_modelo, zipf)
-        self._zipdir(self.tmp + dir_vectores, dir_vectores, zipf)
-        self._zipdir(self.tmp + dir_graficos, dir_graficos, zipf)
-        self._zipdir(self.tmp + file_param, file_param, zipf)
-
-        zipf.close()
-
-        return
-
-    def _zipdir(self, path, dir_, ziph):
-        # ziph is zipfile handle
-        for root, dirs, files in os.walk(path):
-            for file_ in files:
-                ziph.write(os.path.join(root, file_), dir_ + file_)

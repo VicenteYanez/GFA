@@ -171,15 +171,20 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
                         2. North desplacement
                         3. Vertical desplacement
                     example:
-                        list[4][1][2] : north desplacment of station number 4
-                        list[4][0]    : name of station number 4
-    * list_estations: [list] with the name, longitude and latitude
-    for each station.
+                        data[4][1][2] : north desplacment of station number 4
+                        data[4][0]    : name of station number 4
+    * list_estations: [list] with the name, longitude and latitude,
+                      parameters and the residual of the model
+                      for each station.
     """
     # Carga de lista de estaciones
     estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
     lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1, dtype=float)
     lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
+    param = np.loadtxt(estac_list, usecols=[3], skiprows=1, dtype=str,
+                       delimiter='    ')
+    residual = np.loadtxt(estac_list, usecols=[4], skiprows=1, dtype=str,
+                          delimiter='    ')
 
     # array para guardar datos
     data = np.array([])
@@ -228,7 +233,8 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
             continue
 
         data_temp2 = list(data_temp2.T)
-        lista_estac.append([estacion, lon_est[i], lat_est[i]])
+        lista_estac.append([estacion, lon_est[i], lat_est[i], param[i],
+                            residual[i]])
 
         # la primera vez data = data_temp, luego va apilando
         if data_vacio:

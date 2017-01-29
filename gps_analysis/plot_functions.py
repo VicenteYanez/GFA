@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 
 
-def ts_plot(estac, tiempo, desp, modelo, t_sismo=False, savedir='./', *recta):
+def plot(estac, tiempo, desp, modelo, t_sismo=False, savedir='./', *recta):
     """
     Grafica o guarda las figuras construidas.
     Input
