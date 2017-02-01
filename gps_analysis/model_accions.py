@@ -3,10 +3,12 @@
 import copy
 import os
 import pdb
+import json
 
 import numpy as np
 
 import fun_vector
+import fun_datos
 from ModeloTrayectoria import ModeloTrayectoria
 
 """
@@ -67,7 +69,7 @@ def build_model(data, param):
     return resultado_modelo, residual
 
 
-def calc_vector(estacion, file_modelo, vector_file, tipo_vector, *t0):
+def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
     """
     Metodo que llama a una funcion para crear un vector
     dependiendo del tipo de calculo elegido
@@ -76,11 +78,16 @@ def calc_vector(estacion, file_modelo, vector_file, tipo_vector, *t0):
     """
     modelo = np.loadtxt(file_modelo).T
 
+    # Si la serie no contiene el tiempo t, regresa falso
+    if modelo[0][len(modelo[0])-1] < float(t0) and t0:
+        print('Error, estation do not have the time {}'.format(t0))
+        return False
+
     # ####################################################################
     # PEDIR VECTOR
     # ####################################################################
     if tipo_vector == 'tangente' and t0:
-        t0 = float(t0[0])
+        t0 = float(t0)
         vector, c = fun_vector.tangente(t0, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
     elif tipo_vector == 'ajuste':
@@ -104,10 +111,44 @@ def calc_vector(estacion, file_modelo, vector_file, tipo_vector, *t0):
 
     # guardar vector estacion
     if os.path.isfile(vector_file):
-        vectores = np.loadtxt(vector_file, dtype='S5')
+        vectores = np.loadtxt(vector_file, dtype='S10')
         vectores = np.vstack((vectores, save_vector))
         np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ')
     else:
         np.savetxt(vector_file, [save_vector], fmt='%s', delimiter='    ')
 
+    return
+
+
+def save_model(modelo, model_file):
+    """
+    Save the data of one model
+    """
+    head = 'time[yr], Desp[mm] Est, North, Vertical, Err[mm] Est, North,\
+Vertical'
+    # save = np.array(modelo[1]).T
+    np.savetxt(model_file, modelo, fmt='%s', header=head, delimiter='    ')
+    return
+
+
+def upgrade_list(estacion, parametros, residual, directory):
+    """
+    Upgrade the model list with the new parameters
+    """
+    # pasar residual y parametros to json
+    residual = {'Residual E': residual[0].tolist(),
+                'Residual N': residual[1].tolist(),
+                'Residual Z': residual[2].tolist()}
+    parametros_json = json.dumps(parametros)
+    residual_json = json.dumps(residual)
+    head = 'estation    longitude    latitude    Parameters    Error'
+    archivo = '{}modelo_lista.txt'.format(directory)
+    data = np.loadtxt(archivo, dtype=str, delimiter='    ')
+    for i, row in enumerate(data):
+        if row[0] == estacion:
+            data[i] = np.array([estacion, row[1].decode('utf-8'),
+                                row[2].decode('utf-8'),
+                                parametros_json, residual_json])
+    # actualizar txt
+    np.savetxt(archivo, data, fmt='%s', delimiter='    ')
     return

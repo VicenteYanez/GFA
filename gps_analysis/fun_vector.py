@@ -27,9 +27,6 @@ def tangente(ti, t, e, n, z):
     n:  array con desplazamiento norte
     z:  array con desplazamiento vertical
     """
-    # Si la serie no contiene el tiempo t, regresa falso
-    if t[len(t)-1] < ti:
-        return False
     # evalua la velocidad en base a los dos puntos mas cercanos del modelo
     idx = (np.abs(t-ti)).argmin()
 

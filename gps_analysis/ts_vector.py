@@ -40,4 +40,4 @@ else:
     res = calc_vector(estacion, file_modelo, vector_file, tipo_vector)
 
 if res is False:
-    print('Vector creado incorrectamente')
+    print('ts_vector was failed')
