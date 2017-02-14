@@ -11,6 +11,8 @@ import os
 import numpy as np
 import pdb
 
+from fun_datos import array2list
+
 
 def clean_serie(serie, err_max=10):
     """
@@ -178,13 +180,14 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
                       for each station.
     """
     # Carga de lista de estaciones
-    estaciones = np.loadtxt(estac_list, usecols=[0], dtype='S5', skiprows=1)
+    estaciones = np.loadtxt(estac_list, usecols=[0], dtype=bytes,
+                            skiprows=1).astype(str)
     lon_est = np.loadtxt(estac_list, usecols=[1], skiprows=1, dtype=float)
     lat_est = np.loadtxt(estac_list, usecols=[2], skiprows=1, dtype=float)
-    param = np.loadtxt(estac_list, usecols=[3], skiprows=1, dtype=str,
-                       delimiter='    ')
-    residual = np.loadtxt(estac_list, usecols=[4], skiprows=1, dtype=str,
-                          delimiter='    ')
+    param = np.loadtxt(estac_list, usecols=[3], skiprows=1, dtype=bytes,
+                       delimiter='    ').astype(str)
+    residual = np.loadtxt(estac_list, usecols=[4], skiprows=1, dtype=bytes,
+                          delimiter='    ').astype(str)
 
     # array para guardar datos
     data = np.array([])
@@ -195,7 +198,6 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
     # CICLO DE CARGA
     # ###################################################################
     for i, estacion in enumerate(estaciones):
-        estacion = estacion.decode('utf-8')
         # ###################################################
         # Seleccion por area
         if lat_est[i] < lat[0] or lat_est[i] > lat[1]:
@@ -259,13 +261,14 @@ def load1stations(name, directory, ts=True, model=False):
     if ts is False and model is False:
         print('No data selected, time series and model are false.')
         return None
+    tsdata = False
+    modeldata = False
     if ts is True:
         ts_dir = '{}series/{}.txt'.format(directory, name)
         tsdata = np.loadtxt(ts_dir, dtype=float, skiprows=1)
-        tsdata = tsdata.T
+        tsdata = [name, tsdata.T]
     if model is True:
         model_dir = '{}modelo/{}.txt'.format(directory, name)
         modeldata = np.loadtxt(model_dir, dtype=float, skiprows=1)
-        modeldata = modeldata.T
-
+        modeldata = [name, modeldata.T]
     return tsdata, modeldata

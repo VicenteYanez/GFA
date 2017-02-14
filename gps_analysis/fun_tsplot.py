@@ -2,21 +2,16 @@
 
 """
 @author: Vicente Yáñez
-@date: Enero 2016
-Centro Sismologico Nacional
-Santiago, Chile.
 
-Modificado para su uso en los scripts de GPS Field Analysis
-Recopilacion de scripts para graficar series de tiempo
+Functions for plot time series GNSS
 """
 
 
 import numpy as np
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 
 
-def plot(estac, tiempo, desp, modelo, t_sismo=False, savedir='./', *recta):
+def plot(estac, tiempo, desp):
     """
     Grafica o guarda las figuras construidas.
     Input
@@ -25,17 +20,13 @@ def plot(estac, tiempo, desp, modelo, t_sismo=False, savedir='./', *recta):
     desp    : array de 2d de 3 x n. Donde cada fila es el desp en un eje.
               [0] Este, [1] Norte [3] Vertical
     modelo  : Idem que desp
-    t_sismo : Opcional, se ignora si es False
-
-    Argumentos adicionales
-    recta   : touple con datos de pendiente y c
     """
     # plot puntos y error bar
     f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
 
     # formato ejes
-    plt.xlabel('años')
-    plt.ylabel('milimetros')
+    plt.xlabel('years')
+    plt.ylabel('mm')
 
     # poner marcas solo en parte inferior y laterales
     ax1.get_xaxis().tick_bottom()
@@ -51,42 +42,50 @@ def plot(estac, tiempo, desp, modelo, t_sismo=False, savedir='./', *recta):
     ax2.plot(tiempo, desp[1], 'bo')
     ax3.plot(tiempo, desp[2], 'bo')
 
-    # agregar evento sismico
-    if t_sismo:
-        for sismo in t_sismo:
-            ax1.plot((sismo, sismo), (desp[0].max(), desp[0].min()), '-k')
-            ax2.plot((sismo, sismo), (desp[1].max(), desp[1].min()), '-k')
-            ax3.plot((sismo, sismo), (desp[2].max(), desp[2].min()), '-k')
-
-    # modelo trajectoria
-    ax1.plot(tiempo, modelo[0], '-g', label='Este')
-    ax2.plot(tiempo, modelo[1], '-g', label='Norte')
-    ax3.plot(tiempo, modelo[2], '-g', label='Vertical')
-
-    # pendientes de velocidad
-    if recta:
-        recta = recta[0]
-        # muestreo
-        d1 = recta[0]*tiempo[0] + recta[1]
-        d2 = recta[0]*tiempo[-1] + recta[1]
-        ax1.plot((tiempo[0], tiempo[-1]), (d1[0], d2[0]),
-                 '-k', label='Velocidad Este')
-        ax2.plot((tiempo[0], tiempo[-1]), (d1[1], d2[1]),
-                 '-k', label='Velocidad Norte')
-        ax3.plot((tiempo[0], tiempo[-1]), (d1[2], d2[2]),
-                 '-k', label='Velocidad Vertical')
-
     ax1.set_title(estac + ": Este")
     ax2.set_title(estac + ": Norte")
     ax3.set_title(estac + ": Vertical")
 
-    ################################################
-    # Guardar figura
-    dir_archivo = '{}{}.png'.format(savedir, estac)
-    plt.savefig(dir_archivo, dpi=250, bbox_inches='tight')
-    plt.close()
+    return f, (ax1, ax2, ax3)
 
-    return
+
+def add_modelo(figure, axes, tiempo, modelo):
+    axes[0].plot(tiempo, modelo[0], '-g', label='Este')
+    axes[1].plot(tiempo, modelo[1], '-g', label='Norte')
+    axes[2].plot(tiempo, modelo[2], '-g', label='Vertical')
+
+    return figure, axes
+
+
+def add_velocity(figure, axes, tiempo, recta):
+    """
+    Add velocity trend
+    """
+    # muestreo
+    d1 = recta[0]*tiempo[0] + recta[1]
+    d2 = recta[0]*tiempo[-1] + recta[1]
+    axes[0].plot((tiempo[0], tiempo[-1]), (d1[0], d2[0]),
+                 '-r', label='Velocidad Este')
+    axes[1].plot((tiempo[0], tiempo[-1]), (d1[1], d2[1]),
+                 '-r', label='Velocidad Norte')
+    axes[2].plot((tiempo[0], tiempo[-1]), (d1[2], d2[2]),
+                 '-r', label='Velocidad Vertical')
+    return figure, axes
+
+
+def add_sismo(figure, axes, t_sismo):
+    # agregar evento sismico
+    for sismo in t_sismo:
+        axes[0].plot((sismo, sismo), (desp[0].max(), desp[0].min()), '-k')
+        axes[1].plot((sismo, sismo), (desp[1].max(), desp[1].min()), '-k')
+        axes[2].plot((sismo, sismo), (desp[2].max(), desp[2].min()), '-k')
+    return figure, axes
+
+
+def save_figure(figure, savefile='./',):
+    # Guardar figura
+    plt.savefig(savefile, dpi=300, bbox_inches='tight')
+    plt.close()
 
 
 def mapa_estaciones(lat, lon, pathdir='./'):

@@ -47,17 +47,9 @@ def build_model(data, param):
     resultado_z, err_z = modelo_z.modelo_trayectoria(serie[3])
 
     # resultado total
-    res_total_e = (resultado_e[0] + resultado_e[1] +
-                   resultado_e[2] + resultado_e[3])
-    res_total_n = (resultado_n[0] + resultado_n[1] +
-                   resultado_n[2] + resultado_n[3])
-    res_total_z = (resultado_z[0] + resultado_z[1] +
-                   resultado_z[2] + resultado_z[3])
-
-    # formatear array para guardado
-    res_total_e = res_total_e[:, 0]
-    res_total_n = res_total_n[:, 0]
-    res_total_z = res_total_z[:, 0]
+    res_total_e = modelo_e.total
+    res_total_n = modelo_n.total
+    res_total_z = modelo_z.total
 
     # ####################################################################
     # GUARDAR MODELO
@@ -65,6 +57,8 @@ def build_model(data, param):
     resultado_modelo = np.array([serie[0], res_total_e, res_total_n,
                                  res_total_z]).T
     residual = [err_e, err_n, err_z]
+    print(res_total_e)
+    pdb.set_trace()
 
     return resultado_modelo, residual
 
@@ -107,11 +101,11 @@ def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
 
     # GUARDAR VECTOR ######################################################
     # incorporar nombre de estacion a array para guardar
-    save_vector = np.hstack(([estacion], vector))
+    save_vector = np.hstack(([estacion, tipo_vector], vector, c))
 
     # guardar vector estacion
     if os.path.isfile(vector_file):
-        vectores = np.loadtxt(vector_file, dtype='S10')
+        vectores = np.loadtxt(vector_file, dtype=byte).astype(str)
         vectores = np.vstack((vectores, save_vector))
         np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ')
     else:
@@ -143,12 +137,30 @@ def upgrade_list(estacion, parametros, residual, directory):
     residual_json = json.dumps(residual)
     head = 'estation    longitude    latitude    Parameters    Error'
     archivo = '{}modelo_lista.txt'.format(directory)
-    data = np.loadtxt(archivo, dtype=str, delimiter='    ')
+    data = np.loadtxt(archivo, dtype=bytes, delimiter='    ').astype(str)
     for i, row in enumerate(data):
         if row[0] == estacion:
-            data[i] = np.array([estacion, row[1].decode('utf-8'),
-                                row[2].decode('utf-8'),
+            data[i] = np.array([estacion, row[1], row[2],
                                 parametros_json, residual_json])
     # actualizar txt
     np.savetxt(archivo, data, fmt='%s', delimiter='    ')
     return
+
+
+def load_vector(vectorfile, estation):
+    """
+    Function that load the vector from the vector.txt file
+    """
+    estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes).astype(str)
+    print(estlist)
+    vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], dtype=float)
+    c = np.loadtxt(vectorfile, usecols=[5, 6, 7], dtype=float)
+
+    try:
+        for i, est in enumerate(estlist):
+            if est == estation:
+                data = [vectors[i], c[i]]
+    except TypeError:
+        data = [vectors, c]
+
+    return data

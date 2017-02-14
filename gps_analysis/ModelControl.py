@@ -7,6 +7,7 @@
 import os
 import copy
 import json
+import pdb
 
 import numpy as np
 
@@ -149,27 +150,6 @@ class ModelControl(TimeSeriesControl):
 
         return data, lista
 
-    def _save_param(self, estacion, parametros, residual, autor='auto'):
-        """
-        Actualiza los valores en la tabla de estaciones generados por
-        main_seleccionar
-        """
-        archivo = '{}_tabla_estaciones.txt'.format(self.savedir)
-        if os.path.isfile(archivo):
-            data = np.loadtxt(archivo, dtype=str, delimiter='    ')
-
-            # Modificar
-            for i in range(len(data)):
-                if data[i][0] == estacion:
-                    data[i] = np.array([estacion, data[i][1], data[i][2],
-                                        parametros, residual])
-
-            # actualizar txt
-            np.savetxt(archivo, data, fmt='%s', delimiter='    ')
-        else:
-            print('There is no station table file')
-        return
-
     def _load_events(self, name_est, earthq_file):
         """
         Function that calculate the jumps, tlt and tsc of the trajectory
@@ -225,7 +205,7 @@ class ModelControl(TimeSeriesControl):
         # guardar lista de estaciones
         head = 'estation    longitude    latitude    Parameters    Error'
         np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
-                   self.lista, fmt='%s', header=head)
+                   self.lista, fmt='%s', header=head, delimiter='    ')
 
         # Crear directorio para almacenar los resultados
         save_series = '{}{}/'.format(self.savedir, self.clas)
