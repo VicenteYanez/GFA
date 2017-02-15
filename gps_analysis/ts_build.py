@@ -25,6 +25,9 @@ path = os.path.dirname(os.path.abspath(__file__))
 directory = '{}/../example_files/{}/'.format(path, codigo)
 model_file = '{}modelo/{}.txt'.format(directory, estation)
 
+if os.path.isfile(model_file) is False:
+    sys.exit('Error, model had not been loaded')
+
 # parametros del nuevo modelo
 parametros = {"polinomio": 1,
               "saltos": [2010.01, 2014.24832],

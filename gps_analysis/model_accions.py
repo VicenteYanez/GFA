@@ -57,8 +57,6 @@ def build_model(data, param):
     resultado_modelo = np.array([serie[0], res_total_e, res_total_n,
                                  res_total_z]).T
     residual = [err_e, err_n, err_z]
-    print(res_total_e)
-    pdb.set_trace()
 
     return resultado_modelo, residual
 
