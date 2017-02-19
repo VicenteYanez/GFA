@@ -34,8 +34,8 @@ t2 = fun_tools.toYearFraction(t2.year, t2.month, t2.day)
 
 # path archivos
 dir_path = os.path.dirname(os.path.realpath(__file__))
-lista_gps = '{}/../data/SeriesTiempo/pos_jc'.format(dir_path)
-series_dir = '{}/../data/SeriesTiempo/JC/'.format(dir_path)
+lista_gps = '{}/../data/TimeSeries/estation_list.txt'.format(dir_path)
+series_dir = '{}/../data/TimeSeries/txtfiles/'.format(dir_path)
 save_dir = '{}/../example_files/'.format(dir_path)
 # optional: dir of the trajectory model
 model_dir = '{}/../example_files/general_solution/Modelo/'.format(dir_path)

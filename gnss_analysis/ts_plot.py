@@ -44,7 +44,7 @@ try:
                                     modeldata[1][1:4])
         print('Model added')
 except IndexError:
-    print('Model not added. Error loading parameters')
+    print('Model not added')
     pass
 
 # optional plots: add vector
@@ -57,9 +57,9 @@ try:
         # plot
         f, axes = pltfun.add_velocity(f, axes, tsdata[1][0], vectors)
         print('Vector added')
-        
+
 except IndexError:
-    print('Vector not added. Error loading parameters')
+    print('Vector not added')
     pass
 
 # save plot

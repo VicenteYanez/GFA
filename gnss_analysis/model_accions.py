@@ -103,7 +103,7 @@ def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
 
     # guardar vector estacion
     if os.path.isfile(vector_file):
-        vectores = np.loadtxt(vector_file, dtype=byte).astype(str)
+        vectores = np.loadtxt(vector_file, dtype=bytes).astype(str)
         vectores = np.vstack((vectores, save_vector))
         np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ')
     else:
@@ -150,7 +150,6 @@ def load_vector(vectorfile, estation):
     Function that load the vector from the vector.txt file
     """
     estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes).astype(str)
-    print(estlist)
     vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], dtype=float)
     c = np.loadtxt(vectorfile, usecols=[5, 6, 7], dtype=float)
 
