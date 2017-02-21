@@ -195,59 +195,56 @@ while ok in ['n', 'N']:
 	ok = input(color.BOLD+"Do you like the result? y/n "+color.END)
 	print(" ")
 
-if 'parametros' in locals():
-    ok_no_f = input(color.BOLD+"Do you want to compute a solution with no seasonal component? y/n "+color.END)
-    print(" ")
-    if ok_no_f in ['y', 'Y', 's', 'S', 'O', 'o']:
-    	model_file = '{}modelo/{}_nof.txt'.format(directory, estation)
-    	parametros = {"polinomio": pl,
-    			      "saltos": hs,
-    			      "Escala curva log": ls,
-    			      "Periodos Fourier":  fp,
-    			      "Inicio log": lb}
-    	tsdata, modeldata = load1stations(estation, directory, True, model=False)
-    	modelo, residual = build_model_sf(tsdata, parametros)
-    	save_model(modelo, model_file)
-    	upgrade_list(estation, parametros, residual, directory)
+ok_no_f = input(color.BOLD+"Do you want to compute a solution with no seasonal component? y/n "+color.END)
+print(" ")
+if ok_no_f in ['y', 'Y', 's', 'S', 'O', 'o']:
+	model_file = '{}modelo/{}_nof.txt'.format(directory, estation)
+	parametros = {"polinomio": pl,
+			      "saltos": hs,
+			      "Escala curva log": ls,
+			      "Periodos Fourier":  fp,
+			      "Inicio log": lb}
+	tsdata, modeldata = load1stations(estation, directory, True, model=False)
+	modelo, residual = build_model_sf(tsdata, parametros)
+	save_model(modelo, model_file)
+	upgrade_list(estation, parametros, residual, directory)
 
-    	ts_dates=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[0])
-    	ts_e    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[1])
-    	ts_n    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[2])
-    	ts_z    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[3])
-    	ts_e_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[4])
-    	ts_n_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[5])
-    	ts_z_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[6])
-    	tm_dates=np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[0])
-    	tm_e    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[1])
-    	tm_n    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[2])
-    	tm_z    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[3])
-    	"""
-    	East component
-    	"""
-    	plt.subplot(311)
-    	plt.errorbar(ts_dates, ts_e, yerr=ts_e_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
-    	plt.plot(tm_dates, tm_e, '-', c='g', linewidth=2., alpha=1.)
-    	plt.grid(True)
-    	plt.ylabel('Displacement mm')
-    	plt.title('Time serie and trajectory model for '+estation)
-    	"""
-    	North component
-    	"""
-    	plt.subplot(312)
-    	plt.errorbar(ts_dates, ts_n, yerr=ts_n_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
-    	plt.plot(tm_dates, tm_n, '-', c='g', linewidth=2., alpha=1.)
-    	plt.grid(True)
+	ts_dates=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[0])
+	ts_e    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[1])
+	ts_n    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[2])
+	ts_z    =np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[3])
+	ts_e_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[4])
+	ts_n_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[5])
+	ts_z_err=np.loadtxt("../example_files/"+codigo+"/series/"+estation+".txt", usecols=[6])
+	tm_dates=np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[0])
+	tm_e    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[1])
+	tm_n    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[2])
+	tm_z    =np.loadtxt("../example_files/"+codigo+"/modelo/"+estation+"_nof.txt", usecols=[3])
+	"""
+	East component
+	"""
+	plt.subplot(311)
+	plt.errorbar(ts_dates, ts_e, yerr=ts_e_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
+	plt.plot(tm_dates, tm_e, '-', c='g', linewidth=2., alpha=1.)
+	plt.grid(True)
+	plt.ylabel('Displacement mm')
+	plt.title('Time serie and trajectory model for '+estation)
+	"""
+	North component
+	"""
+	plt.subplot(312)
+	plt.errorbar(ts_dates, ts_n, yerr=ts_n_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
+	plt.plot(tm_dates, tm_n, '-', c='g', linewidth=2., alpha=1.)
+	plt.grid(True)
 
-    	"""
-    	Vertical component
-    	"""
-    	plt.subplot(313)
-    	plt.errorbar(ts_dates, ts_z, yerr=ts_z_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
-    	plt.plot(tm_dates, tm_z, '-', c='g', linewidth=2., alpha=1.)
-    	plt.grid(True)
-    	plt.show()
-    else:
-    	print(color.BOLD+color.RED+"OK, good luck!"+color.END)
-    	print(" ")
+	"""
+	Vertical component
+	"""
+	plt.subplot(313)
+	plt.errorbar(ts_dates, ts_z, yerr=ts_z_err, markersize=5., fmt='bo', ecolor='b', elinewidth=1.)
+	plt.plot(tm_dates, tm_z, '-', c='g', linewidth=2., alpha=1.)
+	plt.grid(True)
+	plt.show()
 else:
-    print('Bye')
+	print(color.BOLD+color.RED+"OK, good luck!"+color.END)
+	print(" ")
