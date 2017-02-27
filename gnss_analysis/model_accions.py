@@ -61,6 +61,54 @@ def build_model(data, param):
     return resultado_modelo, residual
 
 
+def build_model_sf(data, param):
+    """
+    Genera un nuevo modelo a partir de los parametros dados por el usuario
+
+    Input:
+    Lee parametros nuevos desde tmp/cambio_param.txt. Con el mismo
+    formato que el guardado por load_stations.
+    Codigo fecha
+
+    """
+    estacion = data[0]
+    serie = data[1]
+    # carga de parametros
+    modelo = ModeloTrayectoria(serie[0])
+    modelo.n = param['polinomio']
+    modelo.tjump = np.array(param['saltos'])
+    modelo.fperiods = np.array(param['Periodos Fourier'])
+    modelo.tlt = np.array(param['Inicio log'])
+    modelo.tsc = np.array(param['Escala curva log'])
+
+    # copia del objeto modelo para cada uno de los ejes
+    modelo_e = copy.deepcopy(modelo)
+    modelo_n = copy.deepcopy(modelo)
+    modelo_z = copy.deepcopy(modelo)
+
+    # calculo del modelo de trayectoria
+    resultado_e, err_e = modelo_e.modelo_trayectoria(serie[1])
+    resultado_n, err_n = modelo_n.modelo_trayectoria(serie[2])
+    resultado_z, err_z = modelo_z.modelo_trayectoria(serie[3])
+
+    # resultado total sin fourier
+    res_total_e = (resultado_e[0].T[0] + resultado_e[1].T[0] +
+                   resultado_e[3].T[0])
+    res_total_n = (resultado_n[0].T[0] + resultado_n[1].T[0] +
+                   resultado_n[3].T[0])
+    res_total_z = (resultado_z[0].T[0] + resultado_z[1].T[0] +
+                   resultado_z[3].T[0])
+
+    # ####################################################################
+    # GUARDAR MODELO
+    # ####################################################################
+    resultado_modelo = np.array([serie[0], res_total_e, res_total_n,
+                                 res_total_z]).T
+    residual = [err_e, err_n, err_z]
+
+    return resultado_modelo, residual
+
+
 def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
     """
     Metodo que llama a una funcion para crear un vector

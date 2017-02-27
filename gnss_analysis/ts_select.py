@@ -2,39 +2,46 @@
 """
 @author: Vicente Yáñez
 @date: 2017
-Universidad de Concepción
 
-Script que corre para crear la lista de estaciones
-con sus datos
+Extract the time series data giving a certain time range and area
+
 """
 import sys
 import os
 import numpy as np
 import pdb
 import shutil
+import logging
 
 from TimeSeriesControl import TimeSeriesControl
 from ModelControl import ModelControl
 
-codigo = str(sys.argv[1])
-lon_min = float(sys.argv[2])
-lon_max = float(sys.argv[3])
-lat_min = float(sys.argv[4])
-lat_max = float(sys.argv[5])
-tmin = float(sys.argv[6])
-tmax = float(sys.argv[7])
+# login config
+logging.basicConfig(filename='../gfa.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
+logger = logging.getLogger(__name__)
 
-"""
-# transformacion de formato intervalo
-t1 = fun_tools.string2date(tmin)
-t2 = fun_tools.string2date(tmax)
-t1 = fun_tools.toYearFraction(t1.year, t1.month, t1.day)
-t2 = fun_tools.toYearFraction(t2.year, t2.month, t2.day)
-"""
+try:
+    codigo = str(sys.argv[1])
+    lon_min = float(sys.argv[2])
+    lon_max = float(sys.argv[3])
+    lat_min = float(sys.argv[4])
+    lat_max = float(sys.argv[5])
+    tmin = float(sys.argv[6])
+    tmax = float(sys.argv[7])
+
+    if lon_min > lon_max or lat_min > lat_max or tmin > tmax:
+        raise ValueError()
+
+except(ValueError, IndexError) as err:
+    print('A wild error had raised when GFA was reading the parameters!\
+ Please, check your input parameter and restart the script')
+    logger.error(err)
+    exit()
 
 # path archivos
 dir_path = os.path.dirname(os.path.realpath(__file__))
-lista_gps = '{}/../data/TimeSeries/estation_list.txt'.format(dir_path)
+lista_gps = '{}/../data/TimeSeries/station_list.txt'.format(dir_path)
 series_dir = '{}/../data/TimeSeries/txtfiles/'.format(dir_path)
 save_dir = '{}/../example_files/'.format(dir_path)
 # optional: dir of the trajectory model
@@ -52,13 +59,18 @@ if os.path.exists(select_dir):
     else:
         rename = input('Rename the identificator parameter:')
         codigo = rename
+try:
+    ts = TimeSeriesControl(codigo, lista_gps, series_dir, save_dir)
+    ts.load_estations(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
+    ts.savedata()
 
-ts = TimeSeriesControl(codigo, lista_gps, series_dir, save_dir)
-ts.load_estations(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
-ts.savedata()
+    # optional: if you have a trajectory model you can load the same way
+    if os.path.exists(model_dir):
+        model = ModelControl(codigo, m_ls, model_dir, save_dir)
+        model.load_model(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
+        model.savedata()
 
-# optional: if you have a trajectory model you can load the same way
-if os.path.exists(model_dir):
-    model = ModelControl(codigo, m_ls, model_dir, save_dir)
-    model.load_model(lon_min, lon_max, lat_min, lat_max, tmin, tmax)
-    model.savedata()
+except:
+    print('A wild error had raised! Please, check your input param or go and\
+see the log')
+    logger.error(err)
