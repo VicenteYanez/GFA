@@ -109,34 +109,49 @@ def build_model_sf(data, param):
     return resultado_modelo, residual
 
 
-def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
+def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     """
-    Metodo que llama a una funcion para crear un vector
-    dependiendo del tipo de calculo elegido
+    Method that calls call the functions for compute
+    a velocity vector, depending of the . And finally saves the
+    the vector in vectors.txt file.
     Input
-    *t0: ubicacion de la recta tangente
+    aux: its value depends of the vector_type variable.
+        If it is fit:
+            Time range for the lineal fit (list of lenght 2)
+        If it is tangent:
+            location of the tangent line (float)
     """
     modelo = np.loadtxt(file_modelo).T
-
-    # Si la serie no contiene el tiempo t, regresa falso
-    if modelo[0][len(modelo[0])-1] < float(t0) and t0:
-        print('Error, estation do not have the time {}'.format(t0))
-        return False
 
     # ####################################################################
     # PEDIR VECTOR
     # ####################################################################
-    if tipo_vector == 'tangente' and t0:
-        t0 = float(t0)
+    if vector_type == 'tangent':
+        t0 = float(aux)
+
+        # Si la serie no contiene el tiempo t, regresa falso
+        if modelo[0][len(modelo[0])-1] < float(t0):
+            print('Error, station do not have the time {}'.format(t0))
+            return
+
         vector, c = fun_vector.tangente(t0, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
-    elif tipo_vector == 'ajuste':
-        intervalo = [modelo[0][0], modelo[0][-1]]
-        vector, c, err = fun_vector.aj_lineal(intervalo, modelo[0],
-                                              modelo[1], modelo[2],
-                                              modelo[3])
-    elif tipo_vector == 'trending':
-        print("no implementado")
+        t1 = t0
+        t2 = t0
+    elif vector_type == 'fit':
+        trange = aux
+
+        # Si la serie no contiene el tiempo t, regresa falso
+        if modelo[0][len(modelo[0])-1] < float(trange[0]):
+            print('Error, station do not have the time {}'.format(t0))
+            return
+
+        vector, c, err = fun_vector.fit(trange, modelo[0], modelo[1],
+                                        modelo[2], modelo[3])
+        t1 = trange[0]
+        t2 = trange[1]
+    elif vector_type == 'trending':
+        print("not implemented yet")
     else:
         print("tipo de vector no seleccionado")
         return
@@ -147,15 +162,19 @@ def calc_vector(estacion, file_modelo, vector_file, tipo_vector, t0=False):
 
     # GUARDAR VECTOR ######################################################
     # incorporar nombre de estacion a array para guardar
-    save_vector = np.hstack(([estacion, tipo_vector], vector, c))
+    save_vector = np.hstack(([estacion, vector_type], vector, c, t1, t2))
+    header = "estation    vector_type    Ve    Vn    Vz   Ce    Cn    Cz   t1 \
+   t2"
 
     # guardar vector estacion
     if os.path.isfile(vector_file):
         vectores = np.loadtxt(vector_file, dtype=bytes).astype(str)
         vectores = np.vstack((vectores, save_vector))
-        np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ')
+        np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ',
+                   header=header)
     else:
-        np.savetxt(vector_file, [save_vector], fmt='%s', delimiter='    ')
+        np.savetxt(vector_file, [save_vector], fmt='%s', delimiter='    ',
+                   header=header)
 
     return
 
@@ -197,9 +216,11 @@ def load_vector(vectorfile, estation):
     """
     Function that load the vector from the vector.txt file
     """
-    estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes).astype(str)
-    vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], dtype=float)
-    c = np.loadtxt(vectorfile, usecols=[5, 6, 7], dtype=float)
+    estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes,
+                         skiprows=1).astype(str)
+    vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], skiprows=1,
+                         dtype=float)
+    c = np.loadtxt(vectorfile, usecols=[5, 6, 7], skiprows=1, dtype=float)
 
     try:
         for i, est in enumerate(estlist):

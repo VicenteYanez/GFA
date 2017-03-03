@@ -55,7 +55,7 @@ def tangente(ti, t, e, n, z):
     return np.array([vel_e, vel_n, vel_z]), np.array([c_e, c_n, c_z])
 
 
-def aj_lineal(intervalo, t, e, n, z):
+def fit(intervalo, t, e, n, z):
     """
     Genera un vector realizando un ajuste lineal
     sobre una serie en un intervalo de tiempo
@@ -63,6 +63,9 @@ def aj_lineal(intervalo, t, e, n, z):
     # obtiene datos de intervalo de tiempo
     id_t = (t >= intervalo[0]) & (t <= intervalo[1])
     t = t[id_t]
+    e = e[id_t]
+    n = n[id_t]
+    z = z[id_t]
     if len(t) < 10:
         print("Estacion sin datos para calcular una vel media")
         return False
