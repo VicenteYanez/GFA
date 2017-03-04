@@ -22,29 +22,41 @@ def plot(estac, tiempo, desp):
     modelo  : Idem que desp
     """
     # plot puntos y error bar
-    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, figsize=(10, 7))
 
     # formato ejes
-    plt.xlabel('years')
-    plt.ylabel('mm')
+    plt.xlabel('years', fontsize=8)
+    plt.ylabel('mm', fontsize=8, position=(0.5, 1.8))
+
+    # change font size x and y axis
+    plt.xticks(fontsize=8)
+    ax1.tick_params(labelsize=8)
+    ax2.tick_params(labelsize=8)
+    ax3.tick_params(labelsize=8)
 
     # poner marcas solo en parte inferior y laterales
     ax1.get_xaxis().tick_bottom()
     ax2.get_xaxis().tick_bottom()
     ax3.get_xaxis().tick_bottom()
 
+    # zero line
+    ax1.axhline(0, color='#9D9D9D', linestyle='--', linewidth=0.5)
+    ax2.axhline(0, color='#9D9D9D', linestyle='--', linewidth=0.5)
+    ax3.axhline(0, color='#9D9D9D', linestyle='--', linewidth=0.5)
+
     # evitar offser
     ax1.ticklabel_format(useOffset=False)
     ax2.ticklabel_format(useOffset=False)
     ax3.ticklabel_format(useOffset=False)
 
-    ax1.plot(tiempo, desp[0], 'bo')
-    ax2.plot(tiempo, desp[1], 'bo')
-    ax3.plot(tiempo, desp[2], 'bo')
+    ax1.plot(tiempo, desp[0], 'o', color='#99A3F2', markeredgewidth=0.0)
+    ax2.plot(tiempo, desp[1], 'o', color='#99A3F2', markeredgewidth=0.0)
+    ax3.plot(tiempo, desp[2], 'o', color='#99A3F2', markeredgewidth=0.0)
 
-    ax1.set_title(estac + ": Este")
-    ax2.set_title(estac + ": Norte")
-    ax3.set_title(estac + ": Vertical")
+    # title
+    ax1.set_title("{} Este".format(estac), fontsize=9)
+    ax2.set_title("{} Norte".format(estac), fontsize=9)
+    ax3.set_title("{} Vertical".format(estac), fontsize=9)
 
     return f, (ax1, ax2, ax3)
 
@@ -115,6 +127,14 @@ def mapa_estaciones(lat, lon, pathdir='./'):
     plt.savefig(self.workspace+'mapa_estaciones.ps',
                 dpi=300, bbox_inches='tight')
     plt.close()
+
+    return
+
+
+def add_jlabels():
+    """
+    Function that add a label where the jump is located
+    """
     return
 
 
