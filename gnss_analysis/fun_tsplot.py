@@ -49,14 +49,15 @@ def plot(estac, tiempo, desp):
     ax2.ticklabel_format(useOffset=False)
     ax3.ticklabel_format(useOffset=False)
 
-    ax1.plot(tiempo, desp[0], 'o', color='#99A3F2', markeredgewidth=0.0)
-    ax2.plot(tiempo, desp[1], 'o', color='#99A3F2', markeredgewidth=0.0)
-    ax3.plot(tiempo, desp[2], 'o', color='#99A3F2', markeredgewidth=0.0)
-
     # title
     ax1.set_title("{} Este".format(estac), fontsize=9)
     ax2.set_title("{} Norte".format(estac), fontsize=9)
     ax3.set_title("{} Vertical".format(estac), fontsize=9)
+
+    # plot data
+    ax1.plot(tiempo, desp[0], 'o', color='#99A3F2', markeredgewidth=0.0)
+    ax2.plot(tiempo, desp[1], 'o', color='#99A3F2', markeredgewidth=0.0)
+    ax3.plot(tiempo, desp[2], 'o', color='#99A3F2', markeredgewidth=0.0)
 
     return f, (ax1, ax2, ax3)
 
