@@ -6,6 +6,7 @@
 Functions for plot time series GNSS
 """
 
+import pdb
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -57,19 +58,28 @@ def add_modelo(figure, axes, tiempo, modelo):
     return figure, axes
 
 
-def add_velocity(figure, axes, tiempo, recta):
+def add_velocity(figure, axes, tiempo, rectas):
     """
     Add velocity trend
     """
+    tpart = (tiempo[-1] - tiempo[0])/5
     # muestreo
-    d1 = recta[0]*tiempo[0] + recta[1]
-    d2 = recta[0]*tiempo[-1] + recta[1]
-    axes[0].plot((tiempo[0], tiempo[-1]), (d1[0], d2[0]),
-                 '-r', label='Velocidad Este')
-    axes[1].plot((tiempo[0], tiempo[-1]), (d1[1], d2[1]),
-                 '-r', label='Velocidad Norte')
-    axes[2].plot((tiempo[0], tiempo[-1]), (d1[2], d2[2]),
-                 '-r', label='Velocidad Vertical')
+    for recta in rectas:
+        if recta[2][0] == recta[2][1]:
+            t_tangent = recta[2][0]
+            tr = [t for t in tiempo if t > (t_tangent-tpart) and
+                  t < (t_tangent+tpart)]
+        else:
+            tr = [t for t in tiempo if t > recta[2][0] and t < recta[2][1]]
+
+        d1 = recta[0]*tr[0] + recta[1]
+        d2 = recta[0]*tr[-1] + recta[1]
+        axes[0].plot((tr[0], tr[-1]), (d1[0], d2[0]),
+                     '-r', label='Velocidad Este')
+        axes[1].plot((tr[0], tr[-1]), (d1[1], d2[1]),
+                     '-r', label='Velocidad Norte')
+        axes[2].plot((tr[0], tr[-1]), (d1[2], d2[2]),
+                     '-r', label='Velocidad Vertical')
     return figure, axes
 
 

@@ -216,17 +216,24 @@ def load_vector(vectorfile, estation):
     """
     Function that load the vector from the vector.txt file
     """
+
     estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes,
                          skiprows=1).astype(str)
     vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], skiprows=1,
                          dtype=float)
     c = np.loadtxt(vectorfile, usecols=[5, 6, 7], skiprows=1, dtype=float)
+    t1t2 = np.loadtxt(vectorfile, usecols=[8, 9], skiprows=1, dtype=float)
 
+    data = []
     try:
         for i, est in enumerate(estlist):
             if est == estation:
-                data = [vectors[i], c[i]]
+                # list with t inicial and t final
+                # if vector=tangent, t inicial == t final
+                tmin_tmax = [t1t2[i][0], t1t2[i][-1]]
+                data.append([vectors[i], c[i], tmin_tmax])
     except TypeError:
-        data = [vectors, c]
+        print('there is no data in {}'.format(vectorfile))
+        exit()
 
     return data
