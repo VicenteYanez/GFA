@@ -88,11 +88,11 @@ def add_velocity(figure, axes, tiempo, rectas):
         d1 = recta[0]*tr[0] + recta[1]
         d2 = recta[0]*tr[-1] + recta[1]
         axes[0].plot((tr[0], tr[-1]), (d1[0], d2[0]),
-                     '-r', label='Velocidad Este')
+                     '-r', linewidth=0.8, label='Velocidad Este')
         axes[1].plot((tr[0], tr[-1]), (d1[1], d2[1]),
-                     '-r', label='Velocidad Norte')
+                     '-r', linewidth=0.8, label='Velocidad Norte')
         axes[2].plot((tr[0], tr[-1]), (d1[2], d2[2]),
-                     '-r', label='Velocidad Vertical')
+                     '-r', linewidth=0.8, label='Velocidad Vertical')
     return figure, axes
 
 
