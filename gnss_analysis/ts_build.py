@@ -32,7 +32,7 @@ if os.path.isfile(model_file) is False:
 parametros = {"polinomio": 1,
               "saltos": [2010.01, 2014.24832],
               "Escala curva log": [1],
-              "Periodos Fourier": [1],
+              "Periodos Fourier": [0.9],
               "Inicio log": [2014.24832]}
 
 tsdata, modeldata = load1stations(estation, directory, True, model=False)
