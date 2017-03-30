@@ -11,8 +11,6 @@ import os
 import numpy as np
 import pdb
 
-from fun_datos import array2list
-
 
 def clean_serie(serie, err_max=10):
     """
