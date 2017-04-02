@@ -18,13 +18,13 @@ Also you can contact me to my mail vicenteyanez@protonmail.com
 All the dependences necessary for run GFA are already contained in gfa via virtualenv or optionally installable with pip.
 
 ```
+sudo pip3 install virtualenv (if you don't have it installed)
 git clone http://github.com/VicenteYanez/GFA.github
 cd GFA
+virtualenv gfa_env
 . gfa_env/bin/activate
-```
-or if you want to install the libraries on your computer
-```
 sudo pip3 install -r requirements.txt
 ```
+
 
 If everything is alright, you can continue in the [How to start page](https://github.com/VicenteYanez/GFA/wiki/How-to-start)
