@@ -15,7 +15,7 @@ Also you can contact me to my mail vicenteyanez@protonmail.com
 
 # Install
 
-All the dependences necessary for run GFA are already contained in gfa via virtualenv or optionally installable with pip.
+All the dependences necessary for run GFA are installable via pip. Also, the use of virtualev is recommended.
 
 ```
 sudo pip3 install virtualenv (if you don't have it installed)
