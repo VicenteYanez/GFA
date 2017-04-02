@@ -11,15 +11,11 @@ import os
 import numpy as np
 import pdb
 import shutil
-import logging
 
 from TimeSeriesControl import TimeSeriesControl
 from ModelControl import ModelControl
+import log_config as log
 
-# login config
-logging.basicConfig(filename='../gfa.log', level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-logger = logging.getLogger(__name__)
 
 try:
     codigo = str(sys.argv[1])
@@ -36,7 +32,7 @@ try:
 except(ValueError, IndexError) as err:
     print('A wild error had raised when GFA was reading the parameters!\
  Please, check your input parameter and restart the script')
-    logger.error(err)
+    log.logger.error(err)
     exit()
 
 # path archivos
@@ -73,4 +69,4 @@ try:
 except:
     print('A wild error had raised! Please, check your input param or go and\
 see the log')
-    logger.error(err)
+    log.logger.error(err)

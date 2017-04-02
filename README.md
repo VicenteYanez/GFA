@@ -12,3 +12,19 @@ I'm sorry if you read any misspells o grammatical error. English is my second le
 Francisco García. Francisco is a geologist who is doing his doctoral thesis in Universidad de Concepción about the connection of sismicity and volcanic eruptions in the southern Andes. You can contact him to his email franciscogarcia@udec.cl
 
 Also you can contact me to my mail vicenteyanez@protonmail.com
+
+# Install
+
+All the dependences necessary for run GFA are already contained in gfa via virtualenv or optionally installable with pip.
+
+```
+git clone http://github.com/VicenteYanez/GFA.github
+cd GFA
+. gfa_env/bin/activate
+```
+or if you want to install the libraries on your computer
+```
+sudo pip3 install -r requirements.txt
+```
+
+If everything is alright, you can continue in the [How to start page](https://github.com/VicenteYanez/GFA/wiki/How-to-start)

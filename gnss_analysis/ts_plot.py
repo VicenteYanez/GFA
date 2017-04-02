@@ -22,6 +22,7 @@ import numpy as np
 from loadGPS import load1stations
 from model_accions import load_vector
 import fun_tsplot as pltfun
+import log_config as log
 
 
 # parameters
@@ -52,11 +53,15 @@ try:
     if sys.argv[4] == '-v':
         # file vector
         filevector = '{}vectors.txt'.format(directory)
-        # load vectors
-        vectors = load_vector(filevector, estation)
-        # plot
-        f, axes = pltfun.add_velocity(f, axes, tsdata[1][0], vectors)
-        print('Vector added')
+        try:
+            # load vectors
+            vectors = load_vector(filevector, estation)
+            # plot
+            f, axes = pltfun.add_velocity(f, axes, tsdata[1][0], vectors)
+            print('Vector added')
+        except FileNotFoundError as err:
+            print("Error: Vector file not found")
+            log.logger.error(err)
 
 except IndexError:
     print('Vector not added')
