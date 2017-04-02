@@ -1,1 +1,0 @@
-/usr/lib64/python3.4/struct.py
