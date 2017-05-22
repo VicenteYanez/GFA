@@ -16,7 +16,7 @@ import pdb
 import numpy as np
 from scipy.optimize import curve_fit
 
-import hvsd as hvsd
+from gfa.gnss_analysis.hvsd import hvsd
 
 
 class ModeloTrayectoria():
@@ -115,7 +115,7 @@ class ModeloTrayectoria():
             m = len(self.tjump)
             self.AJ = np.zeros((n, m))  # array de 0 de longitud n*m
             for i in range(m):
-                htt = hvsd.hvsd(self.t, self.tjump[i])
+                htt = hvsd(self.t, self.tjump[i])
                 self.AJ[:, i] = htt
 
     def cycle(self):

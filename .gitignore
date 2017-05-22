@@ -1,3 +1,6 @@
-data/TimeSeries/txtfiles/
+data/
+output/
+gfa_env/
+gfa.egg-info/
 __pycache__/
 *.pyc

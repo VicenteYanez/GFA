@@ -11,9 +11,9 @@ import pdb
 
 import numpy as np
 
-from loadGPS import format_csn, format_model
-from ModeloTrayectoria import ModeloTrayectoria
-from TimeSeriesControl import TimeSeriesControl
+from gfa.gnss_analysis.loadGPS import format_csn, format_model
+from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
+from gfa.gnss_analysis.TimeSeriesControl import TimeSeriesControl
 
 
 class ModelControl(TimeSeriesControl):

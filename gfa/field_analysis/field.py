@@ -2,12 +2,14 @@
 
 """
 @author: vicente
-@date: December 2016
 
 Set of functions related with the velocity field
 """
 
 import numpy as np
+import pdb
+
+from gfa.field_analysis.geometry import vinc_dist, geo2proj
 
 
 def triangular_gradient(ux, uy, x, y, ele):
@@ -83,6 +85,110 @@ def triangular_gradient(ux, uy, x, y, ele):
     gradiente[3] = np.divide(gradiente[3], omega)  # grad uydy
 
     return gradiente
+
+
+def distance_weigthed2d(b, xi, yi, alfa=200000):
+    """
+    Function that calculates a velocity gradient surface using the
+    Grid Distance Weighted from Cardozo&Allmendinger(2009)
+    u   : vector velocities
+    xi  : longitude station position
+    yi  : latitude station position
+    alfa: constant
+    """
+    # prep position matrix M
+    M = []
+    xp, yp = geo2proj(xi, yi, 0, 0)
+    for i, x in enumerate(xi):
+        row1 = [1, 0, xp[i], yp[i], 0, 0]
+        row2 = [0, 1, 0, 0, xp[i], yp[i]]
+        M.append(row1)
+        M.append(row2)
+    M = np.matrix(M)
+
+    # make distance weighted operator
+    a_total = []
+    for i, x in enumerate(xi):
+        d = [vinc_dist(xi[i], yi[i],
+                       xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
+        d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
+        d = np.reshape([d, d], 2*len(d), order='F')  # order array d
+        W = np.exp([-(di**2/(2*alfa**2)) for di in d])
+        # convert W to a diagonal matrMx
+        W = np.matrix(np.diag(W))
+        b = np.matrix(b)
+
+        # error handling in case of station without solution
+        try:
+            # inverse square
+            MTW = M.T*W
+            M2 = (MTW*M)**-1
+            b2 = MTW*b.T
+            a, residual, rank, s = np.linalg.lstsq(M2, b2)
+            print('processing point {}'.format(i))
+            a_total.append(a)
+        except(np.linalg.linalg.LinAlgError):
+            print('error processing point {}'.format(i))
+            a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
+                            [np.nan]])
+    a_total = np.array(a_total).T
+    gradiente = a_total[0][2:]
+
+    return gradiente
+
+
+def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):
+    """
+    Function that calculates a velocity gradient surface using the
+    Grid Distance Weighted from Cardozo&Allmendinger(2009)
+    u   : vector velocities
+    grid   : grid
+    xi  : longitude station position
+    yi  : latitude station position
+    alfa: constant
+    """
+
+    for i, x in enumerate(xi):
+        row1 = [1, 0, 0, xi[i], yi[i], zi[i], 0, 0, 0, 0, 0, 0]
+        row2 = [0, 1, 0, 0, 0, 0, xi[i], yi[i], zi[i], 0, 0, 0]
+        row3 = [0, 0, 1, 0, 0, 0, 0, 0, 0, xi[i], yi[i], zi[i]]
+        M.append(row1)
+        M.append(row2)
+        M.append(row3)
+    M = np.matrix(M)
+
+    # make distance weighted operator
+    a_total = []
+    for i, x in enumerate(xi):
+        d = [vinc_dist(xi[i], yi[i], xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
+        d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
+        d = np.reshape([d, d], 2*len(d), order='F')
+        W = np.exp([-di**2/(2*alfa**2) for di in d])
+        # convert W to a diagonal matrMx
+        W = np.matrix(np.diag(W))
+        # inverse square
+        b = np.matrix(b)
+        MTW = M.T*W
+
+        # error handling in case of station without solution
+        try:
+            M2 = (MTW*M)**-1
+            b2 = MTW*b.T
+            a, residual, rank, s = np.linalg.lstsq(M2, b2)
+            print('processing point {}'.format(i))
+            a_total.append(a)
+        except(np.linalg.linalg.LinAlgError):
+            print('error processing point {}'.format(i))
+            a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
+                            [np.nan]])
+    a_total = np.array(a_total).T
+    gradiente = a_total[0][2:]
+
+    return gradiente
+
+
+def nearest_neighbot(b, xi, yi, dimensions=2):
+    return
 
 
 def velocitytensor_2d(uxdx, uxdy, uydx, uydy):
@@ -186,8 +292,24 @@ def traza_tensor(tensor, grado):
     return traza
 
 
-def principal_stress(tensor):
-    return None
+def principal_stress(tensors):
+    """
+    Function that compute the principale stresses of a deformation tensor
+    from the eigenvalues and eigenvectors
+    Output
+        total_evalue: eigenvalues
+        total_evector: eiguenvector
+    """
+    total_evalue = []
+    total_evector = []
+    tensors = tensors.T
+    for tensor in tensors:
+        tensor = [[tensor[0], tensor[1]], [tensor[2], tensor[3]]]
+        w, v = np.linalg.eig(tensor)
+        total_evalue.append(w)
+        total_evector.append(v)
+
+    return total_evalue, total_evector
 
 
 def clean_array(array_pp, value_min, value_max, param_=()):

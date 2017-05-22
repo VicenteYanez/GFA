@@ -12,8 +12,8 @@ import pdb
 
 import numpy as np
 
-from loadGPS import format_csn, format_model
-import fun_vector
+from gfa.gnss_analysis.loadGPS import format_csn, format_model
+import gfa.gnss_analysis.fun_vector
 
 
 class TimeSeriesControl():

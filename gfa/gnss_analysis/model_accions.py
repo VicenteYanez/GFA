@@ -7,9 +7,9 @@ import json
 
 import numpy as np
 
-import fun_vector
-import fun_datos
-from ModeloTrayectoria import ModeloTrayectoria
+from gfa.gnss_analysis import fun_vector
+from gfa.gnss_analysis import fun_datos
+from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 
 """
 Functions that operates over a unique model file

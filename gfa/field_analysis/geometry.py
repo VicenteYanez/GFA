@@ -31,6 +31,8 @@ def geo2proj(x, y, x0, y0):
     Project the geografic coordinates using the vinc's function
     x, y : mesh
     x0, y0 : origin geografic coordinates
+
+    Return x and y position in meters
     """
     if len(y) and len(x) > 1:
         dy = list(range(len(y)))
