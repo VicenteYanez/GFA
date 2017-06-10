@@ -13,11 +13,22 @@ import gfa.scripts.ts_plot as ts_plot
 import gfa.scripts.ts_vector as ts_vector
 import gfa.scripts.ts_buildmodelall as ts_buildmodelall
 import gfa.scripts.ui_buildmodel as ui_buildmodel
+import gfa.scripts.gfa_configure as gfa_configure
 
 
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+def configure():
+    """
+    Function that creates a default parameters.ini file
+    in the current directory
+    """
+    gfa_configure.main()
+    return
 
 
 @cli.command()
@@ -34,6 +45,7 @@ def select(alias, lonmin, lonmax, latmin, latmax, tmin, tmax):
     """
     gfa.scripts.ts_select.main(alias, lonmin, lonmax, latmin, latmax, tmin,
                                tmax)
+    return
 
 
 @cli.command()
@@ -55,6 +67,7 @@ def build(alias, station, poly, jumps, fourier, logscale, logstart):
     logscale = [float(s) for s in logscale.split(',')]
     logstart = [float(s) for s in logstart.split(',')]
     ts_build.main(alias, station, poly, jumps, fourier, logscale, logstart)
+    return
 
 
 @cli.command()
@@ -67,6 +80,7 @@ def plot(alias, station, model, vector):
     Plot the time series and optionally include the model and vectors
     """
     ts_plot.main(alias, station, model, vector)
+    return
 
 
 @cli.command()
@@ -82,6 +96,7 @@ def vector(alias, station, type, period):
     """
     period = [float(s) for s in period.split(',')]
     ts_vector.main(alias, station, type, period)
+    return
 
 
 @cli.command()
@@ -90,6 +105,7 @@ def buildmodelall():
     Script that calculates a automatic model for all the station
     """
     ts_buildmodelall.main()
+    return
 
 
 @cli.command()
@@ -100,3 +116,4 @@ def uimodel(alias, station):
     Runs a manual script that calculates models with the user's parameters.
     """
     ui_buildmodel.main(alias, station)
+    return

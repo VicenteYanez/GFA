@@ -87,7 +87,8 @@ def triangular_gradient(ux, uy, x, y, ele):
     return gradiente
 
 
-def distance_weigthed2d(b, xi, yi, alfa=200000):
+def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
+                        dmin=200000):
     """
     Function that calculates a velocity gradient surface using the
     Grid Distance Weighted from Cardozo&Allmendinger(2009)
@@ -98,7 +99,7 @@ def distance_weigthed2d(b, xi, yi, alfa=200000):
     """
     # prep position matrix M
     M = []
-    xp, yp = geo2proj(xi, yi, 0, 0)
+    xp, yp = geo2proj(xi, yi, 0, 0)  # proj from geographic to meters
     for i, x in enumerate(xi):
         row1 = [1, 0, xp[i], yp[i], 0, 0]
         row2 = [0, 1, 0, 0, xp[i], yp[i]]
@@ -108,24 +109,31 @@ def distance_weigthed2d(b, xi, yi, alfa=200000):
 
     # make distance weighted operator
     a_total = []
-    for i, x in enumerate(xi):
-        d = [vinc_dist(xi[i], yi[i],
+    for i, x in enumerate(gridx):
+        if i % 100 == 0:
+            print('processing point {}\
+\t {:.0f} percent complete'.format(i, (100*i/len(gridx))))
+
+        d = [vinc_dist(gridx[i], gridy[i],
                        xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
         d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
+        # remove the points with no closest station
+        if d.min() > dmin:
+            a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
+                            [np.nan]])
+            continue
         d = np.reshape([d, d], 2*len(d), order='F')  # order array d
-        W = np.exp([-(di**2/(2*alfa**2)) for di in d])
+        W = np.exp([(-di**2/(2*alfa**2)) for di in d])
         # convert W to a diagonal matrMx
-        W = np.matrix(np.diag(W))
-        b = np.matrix(b)
+        W = np.diag(W)
 
         # error handling in case of station without solution
         try:
             # inverse square
-            MTW = M.T*W
-            M2 = (MTW*M)**-1
-            b2 = MTW*b.T
+            MTW = np.dot(M.T, W)
+            M2 = np.dot(MTW, M)
+            b2 = np.dot(MTW, b)
             a, residual, rank, s = np.linalg.lstsq(M2, b2)
-            print('processing point {}'.format(i))
             a_total.append(a)
         except(np.linalg.linalg.LinAlgError):
             print('error processing point {}'.format(i))
@@ -160,7 +168,8 @@ def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):
     # make distance weighted operator
     a_total = []
     for i, x in enumerate(xi):
-        d = [vinc_dist(xi[i], yi[i], xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
+        d = [vinc_dist(xi[i], yi[i],
+                       xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
         d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
         d = np.reshape([d, d], 2*len(d), order='F')
         W = np.exp([-di**2/(2*alfa**2) for di in d])
@@ -172,9 +181,8 @@ def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):
 
         # error handling in case of station without solution
         try:
-            M2 = (MTW*M)**-1
-            b2 = MTW*b.T
-            a, residual, rank, s = np.linalg.lstsq(M2, b2)
+            M2 = (MTW*M)**-1*MTW
+            a, residual, rank, s = np.linalg.lstsq(M2, b)
             print('processing point {}'.format(i))
             a_total.append(a)
         except(np.linalg.linalg.LinAlgError):
@@ -279,7 +287,7 @@ def cinematic_vorticity(tensorS, tensorW):
     module_S = np.sqrt(module_S)
     module_W = np.sqrt(module_W)
 
-    Wk = module_S/module_W
+    Wk = module_W/module_S
     Wk = np.ma.masked_array(Wk, mask=np.isnan(Wk))  # ignorar valores nan
 
     return Wk
