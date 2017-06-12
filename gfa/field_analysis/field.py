@@ -130,7 +130,7 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
         # error handling in case of station without solution
         try:
             # inverse square
-            MTW = np.dot(M.T, W)
+            MTW = np.dot(np.transpose(M), W)
             M2 = np.dot(MTW, M)
             b2 = np.dot(MTW, b)
             a, residual, rank, s = np.linalg.lstsq(M2, b2)
