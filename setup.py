@@ -9,7 +9,7 @@ def readme():
 
 
 setup(name='gfa',
-      version='1.3.2',
+      version='1.3.3',
       description='Python tools for the geospatial analysis of a velocity\
 field, using Davis & Titus (2011) and Bevis & Brown (2014) papers.',
       long_description=readme(),
