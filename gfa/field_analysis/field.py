@@ -174,15 +174,14 @@ def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):
         d = np.reshape([d, d], 2*len(d), order='F')
         W = np.exp([-di**2/(2*alfa**2) for di in d])
         # convert W to a diagonal matrMx
-        W = np.matrix(np.diag(W))
-        # inverse square
-        b = np.matrix(b)
-        MTW = M.T*W
+        W = np.diag(W)
 
         # error handling in case of station without solution
         try:
-            M2 = (MTW*M)**-1*MTW
-            a, residual, rank, s = np.linalg.lstsq(M2, b)
+            MTW = np.dot(np.transpose(M), W)
+            M2 = np.dot(MTW, M)
+            b2 = np.dot(MTW, b)
+            a, residual, rank, s = np.linalg.lstsq(M2, b2)
             print('processing point {}'.format(i))
             a_total.append(a)
         except(np.linalg.linalg.LinAlgError):

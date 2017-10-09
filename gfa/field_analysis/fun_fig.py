@@ -24,12 +24,6 @@ def vorticity_figure(x, y, z):
     fig = plt.figure(figsize=(6, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
-    paralelos = np.arange(-46, -35, 2)
-    meridianos = np.arange(-76, -70, 2)
-    labelE = [1, 0, 0, 0]
-    labelS = [1, 0, 0, 1]
-    grosor_linea = 0.5
-
     # extension of the map
     latmin_m = y.min() - 0.5
     latmax_m = y.max() + 0.5
@@ -40,6 +34,13 @@ def vorticity_figure(x, y, z):
     latmax = y.max()
     lonmin = x.min()
     lonmax = x.max()
+
+    paralelos = np.arange(int(latmin_m), int(latmax_m), 2)
+    meridianos = np.arange(int(lonmin_m), int(lonmax_m), 2)
+
+    labelE = [1, 0, 0, 0]
+    labelS = [1, 0, 0, 1]
+    grosor_linea = 0.5
 
     ax.set_extent([lonmin_m, lonmax_m, latmin_m, latmax_m])
     ax.set_xticks(meridianos, crs=ccrs.PlateCarree())

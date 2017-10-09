@@ -25,7 +25,7 @@ def main(alfa):
 
     # cargar los datos
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    dataset = '{}/../example_files/vect2007_2010'.format(dir_path)
+    dataset = '{}/../example_files/vect2013_2015'.format(dir_path)
     lon_gps = np.loadtxt(dataset, usecols=[1])
     lat_gps = np.loadtxt(dataset, usecols=[2])
     vn_gps = np.loadtxt(dataset, usecols=[4])
@@ -179,7 +179,7 @@ def okada_test2(alfa):
     return
 
 
-alfa = 50000
+alfa = 150000
 main(alfa)
 # okada_test(alfa)
 # okada_test2(alfa)
