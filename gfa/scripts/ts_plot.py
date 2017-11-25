@@ -33,10 +33,19 @@ def main(codigo, station, addmodel, addvector):
 
     # load data and plot function
     tsdata, modeldata = load1stations(station, directory, True, True)
+    x0 = tsdata[1][1][0]
+    y0 = tsdata[1][2][0]
+    z0 = tsdata[1][3][0]
+    tsdata[1][1] = tsdata[1][1] - x0
+    tsdata[1][2] = tsdata[1][2] - y0
+    tsdata[1][3] = tsdata[1][3] - z0
     f, axes = pltfun.plot(station, tsdata[1][0], tsdata[1][1:4])
 
     # optional plots: add model
     if addmodel == '-m':
+        modeldata[1][1] = modeldata[1][1] - x0
+        modeldata[1][2] = modeldata[1][2] - y0
+        modeldata[1][3] = modeldata[1][3] - z0
         f, axes = pltfun.add_modelo(f, axes, modeldata[1][0],
                                     modeldata[1][1:4])
         print('Model added')

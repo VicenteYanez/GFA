@@ -7,7 +7,7 @@ Set of functions related with the velocity field
 """
 
 import numpy as np
-import pdb
+from scipy.linalg import lstsq
 
 from gfa.field_analysis.geometry import vinc_dist, geo2proj
 
@@ -91,11 +91,24 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
                         dmin=200000):
     """
     Function that calculates a velocity gradient surface using the
-    Grid Distance Weighted from Cardozo&Allmendinger(2009)
-    u   : vector velocities
-    xi  : longitude station position
-    yi  : latitude station position
-    alfa: constant
+    Grid Distance Weighted from Cardozo&Allmendinger(2009). For the
+     least-squares solution it uses the numpy.linalg.lstsq function
+
+    Input
+    b     : velocities vector array like [[v_1x], [v_1y], [v_2x], [v_2y]....]
+    xi    : longitude station position 1d array-like
+    yi    : latitude station position 1d array-like
+    gridx : list with the x-position of each grid point
+    gridy : list with the y-position of each grid point
+    alfa  : constant
+    dmin  : min distance to any station
+
+    Returns
+     - Array with the gradients for each points (4, N)
+    where N (columns) is the number of points in the grid
+    and the rows are (uxdx, uxdy, uydx, uydy)
+
+    - Array with the residuals of the least-squares solution
     """
     # prep position matrix M
     M = []
@@ -109,6 +122,7 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
 
     # make distance weighted operator
     a_total = []
+    residual_total = []
     for i, x in enumerate(gridx):
         if i % 100 == 0:
             print('processing point {}\
@@ -130,19 +144,21 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
         # error handling in case of station without solution
         try:
             # inverse square
-            MTW = np.dot(np.transpose(M), W)
+            MTW = np.dot(M.T, W)
             M2 = np.dot(MTW, M)
             b2 = np.dot(MTW, b)
-            a, residual, rank, s = np.linalg.lstsq(M2, b2)
+            a, residual, rank, s = lstsq(M2, b2)
             a_total.append(a)
+            residual_total.append(residual)
         except(np.linalg.linalg.LinAlgError):
-            print('error processing point {}'.format(i))
+            print('error in point {}, computation does not converge'.format(i))
             a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
                             [np.nan]])
     a_total = np.array(a_total).T
+    residual_total = np.array(residual_total).T
     gradiente = a_total[0][2:]
 
-    return gradiente
+    return gradiente, residual_total
 
 
 def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):

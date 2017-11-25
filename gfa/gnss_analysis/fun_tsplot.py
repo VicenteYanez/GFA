@@ -6,8 +6,6 @@
 Functions for plot time series GNSS
 """
 
-import pdb
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,7 +21,8 @@ def plot(estac, tiempo, desp):
     modelo  : Idem que desp
     """
     # plot puntos y error bar
-    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, figsize=(10, 7))
+    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, figsize=(12, 8))
+    plt.subplots_adjust(hspace=0.3)
 
     # formato ejes
     plt.xlabel('years', fontsize=8)
@@ -51,8 +50,8 @@ def plot(estac, tiempo, desp):
     ax3.ticklabel_format(useOffset=False)
 
     # title
-    ax1.set_title("{} Este".format(estac), fontsize=9)
-    ax2.set_title("{} Norte".format(estac), fontsize=9)
+    ax1.set_title("{} East".format(estac), fontsize=9)
+    ax2.set_title("{} North".format(estac), fontsize=9)
     ax3.set_title("{} Vertical".format(estac), fontsize=9)
 
     # plot data
@@ -64,8 +63,8 @@ def plot(estac, tiempo, desp):
 
 
 def add_modelo(figure, axes, tiempo, modelo):
-    axes[0].plot(tiempo, modelo[0], '-g', label='Este')
-    axes[1].plot(tiempo, modelo[1], '-g', label='Norte')
+    axes[0].plot(tiempo, modelo[0], '-g', label='East')
+    axes[1].plot(tiempo, modelo[1], '-g', label='North')
     axes[2].plot(tiempo, modelo[2], '-g', label='Vertical')
 
     return figure, axes
@@ -88,11 +87,11 @@ def add_velocity(figure, axes, tiempo, rectas):
         d1 = recta[0]*tr[0] + recta[1]
         d2 = recta[0]*tr[-1] + recta[1]
         axes[0].plot((tr[0], tr[-1]), (d1[0], d2[0]),
-                     '-r', linewidth=0.8, label='Velocidad Este')
+                     '-r', linewidth=0.8, label='East velocity')
         axes[1].plot((tr[0], tr[-1]), (d1[1], d2[1]),
-                     '-r', linewidth=0.8, label='Velocidad Norte')
+                     '-r', linewidth=0.8, label='North velocity')
         axes[2].plot((tr[0], tr[-1]), (d1[2], d2[2]),
-                     '-r', linewidth=0.8, label='Velocidad Vertical')
+                     '-r', linewidth=0.8, label='Vertical velocity')
     return figure, axes
 
 

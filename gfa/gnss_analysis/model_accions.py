@@ -208,7 +208,7 @@ def upgrade_list(estacion, parametros, residual, directory):
             data[i] = np.array([estacion, row[1], row[2],
                                 parametros_json, residual_json])
     # actualizar txt
-    np.savetxt(archivo, data, fmt='%s', delimiter='    ')
+    np.savetxt(archivo, data, fmt='%s', delimiter='    ', header=head)
     return
 
 

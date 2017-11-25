@@ -20,7 +20,8 @@ field, using Davis & Titus (2011) and Bevis & Brown (2014) papers.',
       license='GLP-3',
       packages=find_packages(),
       install_requires=[
-          'numpy', 'scipy', 'matplotlib', 'cartopy', 'click'
+          'numpy', 'scipy', 'matplotlib', 'cartopy', 'click', 'flask',
+          'zipfile'
       ],
       entry_points={
         'console_scripts': ['gfa=gfa.scripts.gfa:cli']

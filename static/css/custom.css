@@ -1,0 +1,42 @@
+.header {
+    margin-top: 3rem;
+    text-align: right;
+}
+.footer {
+    margin-top: 3rem;
+    text-align: center;
+    min-width: 100%;
+    background-color: #6e0900ff;
+    color: white;
+    bottom: -15%;
+    position: absolute;
+    min-height: 250px;
+}
+.secondline {
+  font-size: 1.2rem;
+  font-style: oblique;
+}
+  .alert {
+      padding: 20px;
+      background-color: #ffcc99;
+      margin-bottom: 15px;
+}
+hr {
+       display: block;
+       position: relative;
+       padding: 0;
+       margin: 8px auto;
+       height: 0;
+       width: 100%;
+       max-height: 0;
+       font-size: 1px;
+       line-height: 0;
+       clear: both;
+       border: none;
+       border-top: 1px solid #aaaaaa;
+       border-bottom: 1px solid #ffffff;
+    }
+
+.tabbar{
+  width:100%
+}

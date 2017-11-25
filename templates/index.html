@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row">
+    <div class="seven columns">
+      <div id="map" class="map">
+        <script type="text/javascript">
+      // default zoom, center and rotation
+        var zoom = 4;
+        var center = ol.proj.fromLonLat([-70.0, -39.0]);
+        var rotation = 0;
+
+        if (window.location.hash !== '') {
+          // try to restore center, zoom-level and rotation from the URL
+          var hash = window.location.hash.replace('#map=', '');
+          var parts = hash.split('/');
+          if (parts.length === 4) {
+            zoom = parseInt(parts[0], 10);
+            center = [
+              parseFloat(parts[1]),
+              parseFloat(parts[2])
+            ];
+            rotation = parseFloat(parts[3]);
+          }
+        }
+
+        // station points
+        var fill = new ol.style.Fill({color: 'black'});
+        var styles = {
+         'square': new ol.style.Style({
+           image: new ol.style.RegularShape({
+             fill: fill,
+             points: 4,
+             radius: 5,
+             angle: Math.PI / 4
+           })
+         }),
+        }
+        var coordinates = [{% for i in latlon %}
+          [ {{i[0]}}, {{i[1]}} ],
+          {% endfor %}];
+        count = coordinates.length;
+        var features = new Array(count);
+        for (var i = 0; i < count; ++i) {
+          features[i] = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(coordinates[i])));
+          features[i].setStyle(styles['square']);
+        }
+        var source = new ol.source.Vector({
+          features: features
+        });
+
+        var vectorLayer = new ol.layer.Vector({
+          source: source
+        });
+
+
+        var map = new ol.Map({
+          target: 'map',
+          layers: [
+            new ol.layer.Tile({
+              source: new ol.source.OSM()
+            }),
+            vectorLayer
+          ],
+          controls: ol.control.defaults({
+            attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+              collapsible: false
+            })
+          }),
+          view: new ol.View({
+            center: center,
+            zoom: zoom,
+            rotation: rotation
+          })
+        });
+
+        var shouldUpdate = true;
+        var view = map.getView();
+        var updatePermalink = function() {
+          if (!shouldUpdate) {
+            // do not update the URL when the view was changed in the 'popstate' handler
+            shouldUpdate = true;
+            return;
+          }
+
+          var center = view.getCenter();
+          var hash = '#map=' +
+              view.getZoom() + '/' +
+              Math.round(center[0] * 100) / 100 + '/' +
+              Math.round(center[1] * 100) / 100 + '/' +
+              view.getRotation();
+          var state = {
+            zoom: view.getZoom(),
+            center: view.getCenter(),
+            rotation: view.getRotation()
+          };
+          window.history.pushState(state, 'map', hash);
+        };
+
+        map.on('moveend', updatePermalink);
+
+        // Create the graticule component
+        var graticule = new ol.Graticule({
+          // the style to use for the lines, optional.
+          strokeStyle: new ol.style.Stroke({
+            color: 'rgba(0,0,0,0.5)',
+            width: 1,
+            lineDash: [0.5, 4]
+          }),
+          showLabels: true
+        });
+
+        // restore the view state when navigating through the history, see
+        // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onpopstate
+        window.addEventListener('popstate', function(event) {
+          if (event.state === null) {
+            return;
+          }
+          map.getView().setCenter(event.state.center);
+          map.getView().setZoom(event.state.zoom);
+          map.getView().setRotation(event.state.rotation);
+          shouldUpdate = false;
+        });
+
+        graticule.setMap(map);
+      </script>
+      </div>
+    </div>
+    <div class="five columns">
+      <div class="tabbar">
+         <button class="tabbar-button" onclick="openTab('GNSS', 'tabs1')">GNSS</button>
+         <button class="tabbar-button" onclick="openTab('FieldAnalysis', 'tabs1')">Field Analysis</button>
+         <hr>
+      </div>
+      <div id="GNSS" class="tabs1">
+      <form action="{{url_for('homepage')}}", method="post">
+        <h4>Latitude</h4>
+        <label for="latmin">Minimum</label>
+        <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45">
+        <label for="latmax">Maximum</label>
+        <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35">
+        <h4>Longitude</h4>
+        <label for="lonmin">Minimum</label>
+        <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76">
+        <label for="lonmax">Maximum</label>
+        <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64">
+        <h4>Time range (yyyy-mm-dd)</h4>
+        <label for="inicial">Start</label>
+        <input type="text" placeholder="t_inicial" name="t_inicial" value="2005-01-01">
+        <label for="final">End</label>
+        <input type="text" placeholder="t_final" name="t_final" value="2016-12-31">
+        <label>
+          <input type="checkbox">
+          <span class="label-body">Add trajectory model(it doesn't work)</span>
+        </label>
+        <input class="button-primary" name="btn_select" value="Select" type="submit">
+      </form>
+      </div>
+      <div id="FieldAnalysis" class="tabs1" style="display:none">
+        <form action="", method="post">
+          <h4>Latitude</h4>
+          <label for="latmin">Minimum</label>
+          <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45">
+          <label for="latmax">Maximum</label>
+          <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35">
+          <h4>Longitude</h4>
+          <label for="lonmin">Minimum</label>
+          <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76">
+          <label for="lonmax">Maximum</label>
+          <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64">
+          <input class="button-primary" name="btn_select_analysis" value="Select" type="submit">
+          <h4>Metodology</h4>
+          <input type="radio" name="metodology" value="interpol"> Vector interpolation
+          <br />
+          <input type="radio" name="metodology" value="cardozo"> Cardozo & Allmendinger matrix
+        </form>
+      </div>
+  </div>
+</div>
+<br>
+<div class="row">
+  <div class="nine columns">
+    <div class="tabbar">
+      <button class="tabbar-button" onclick="openTab('Model', 'tabs2')">Model tools</button>
+      <button class="tabbar-button" onclick="openTab('Vectors', 'tabs2')">Vectors</button>
+    </div>
+  </div>
+  <div class="three columns">
+    <form action="{{url_for('download')}}?date={{ herenow }}">
+    <input class="button-primary" style="text-align: right" type="submit" value="Download Data">
+    </form>
+  </div>
+  <hr>
+</div>
+  <div id="Model" class="tabs2">
+    <table class="u-full-width">
+      <thead>
+        <tr>
+          <th style="width:10%">Station</th>
+          <th style="width:12%">Polynomial</th>
+          <th style="width:15%">Jumps</th>
+          <th style="width:15%">Fourier</th>
+          <th style="width:15%">Log start</th>
+          <th style="width:15%">Log scale</th>
+          <th style="width:10%"></th>
+          <th style="width:10%"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>All the stations</td>
+          <td><input style="width:100%" type="text" name="poly_all" value=""></td>
+          <td><input style="width:100%" type="text" name="jump_all" value=""></td>
+          <td><input style="width:100%" type="text" name="fourier_all" value=""></td>
+          <td><input style="width:100%" type="text" name="logstart_all" value=""></td>
+          <td><input style="width:100%" type="text" name="logscale_all" value=""></td>
+          <td><button onclick="">Edit All</button></td>
+        </tr>
+        {% for station in stations %}
+        <tr>
+          <form action="edit/{{ station[0] }}", method="post">
+          <td>{{ station[0] }}</td>
+          <td><input style="width:100%" type="text" name="poly" value="{{ station[3] }}"></td>
+          <td><input style="width:100%" type="text" name="jump" value="{{ station[4] }}"></td>
+          <td><input style="width:100%" type="text" name="fourier" value="{{ station[5] }}"></td>
+          <td><input style="wid th:100%" type="text" name="logstart" value="{{ station[6] }}"></td>
+          <td><input style="width:100%" type="text" name="logscale" value="{{ station[7] }}"></td>
+          <td><input class="button-primary" name="edit" value="Edit" type="submit"></td>
+          </form>
+          <td><input class="button-primary" value="Plot" onclick="window.open('plot/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div id="Vectors" class="tabs2" style="display:none">
+    <div class="twelve columns">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:20%">Stations</th>
+          <th style="width:15%">East Velocity</th>
+          <th style="width:15%">North Velocity</th>
+          <th style="width:15%">Vertical Velocity</th>
+          <th style="width:10%">Start</th>
+          <th style="width:10%">End</th>
+          <th style="width:10%"></th>
+          <th style="width:10%"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for station in stations %}
+        <tr>
+          <form action="vector/{{ station[0] }}", method="post">
+          <td>{{ station[0] }}</td>
+          <td><input style="width:100%" type="text" name="v_e" value=""></td>
+          <td><input style="width:100%" type="text" name="v_n" value=""></td>
+          <td><input style="width:100%" type="text" name="v_z" value=""></td>
+          <td><input style="width:100%" type="text" name="t1" value=""></td>
+          <td><input style="width:100%" type="text" name="t2" value=""></td>
+          <td><input class="button-primary" name="edit" value="Calculate" type="submit"></td>
+          <td><input class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
+        </tr>
+        {% endfor %}
+      </body>
+    </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
