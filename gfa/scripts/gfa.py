@@ -52,20 +52,28 @@ def select(alias, lonmin, lonmax, latmin, latmax, tmin, tmax):
 @click.option('--alias', default='default', help='identifier for your query')
 @click.option('--station', default="", help='Station name')
 @click.option('--poly', default=1, help='Grade of the polynomial function')
-@click.option('--fourier', default='1',
+@click.option('--fourier', default='',
               help='periods of the Fourier function')
-@click.option('--jumps', default='2010.01,2014.24832', help='Step location')
+@click.option('--jumps', default='', help='Step location')
 @click.option('--logscale', default='1', help='Scale of the log function')
-@click.option('--logstart', default='2010.01',
-              help='Start of the log function')
+@click.option('--logstart', default='', help='Start of the log function')
 def build(alias, station, poly, jumps, fourier, logscale, logstart):
     """
     Calculates the model for one station
     """
-    fourier = [float(s) for s in fourier.split(',')]
-    jumps = [float(s) for s in jumps.split(',')]
+    if fourier == '':
+        fourier = []
+    else:
+        fourier = [float(s) for s in fourier.split(',')]
+    if jumps == '':
+        jumps = []
+    else:
+        jumps = [float(s) for s in jumps.split(',')]
     logscale = [float(s) for s in logscale.split(',')]
-    logstart = [float(s) for s in logstart.split(',')]
+    if logstart == '':
+        logstart = []
+    else:
+        logstart = [float(s) for s in logstart.split(',')]
     ts_build.main(alias, station, poly, jumps, fourier, logscale, logstart)
     return
 
