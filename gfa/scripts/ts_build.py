@@ -9,11 +9,7 @@ de una estación
 
 import sys
 import os
-import pdb
 
-import numpy as np
-
-import gfa.gnss_analysis.fun_datos
 from gfa.gnss_analysis.loadGPS import load1stations
 from gfa.load_param import Config
 import gfa.gnss_analysis.model_accions as model_accions

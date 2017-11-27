@@ -186,9 +186,7 @@
     </div>
   </div>
   <div class="three columns">
-    <form action="{{url_for('download')}}?date={{ herenow }}">
-    <input class="button-primary" style="text-align: right" type="submit" value="Download Data">
-    </form>
+    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" style="text-align: right" type="submit" value="Download Data">
   </div>
   <hr>
 </div>
@@ -251,14 +249,14 @@
       <tbody>
         {% for station in stations %}
         <tr>
-          <form action="vector/{{ station[0] }}", method="post">
-          <td>{{ station[0] }}</td>
+          <form action="{{url_for('vector')}}", method="post">
+          <td>{{ station[0] }}<input type="hidden" name="stationname" value="{{ station[0]}}"></td>
           <td><input style="width:100%" type="text" name="v_e" value=""></td>
           <td><input style="width:100%" type="text" name="v_n" value=""></td>
           <td><input style="width:100%" type="text" name="v_z" value=""></td>
           <td><input style="width:100%" type="text" name="t1" value=""></td>
           <td><input style="width:100%" type="text" name="t2" value=""></td>
-          <td><input class="button-primary" name="edit" value="Calculate" type="submit"></td>
+          <td><input class="button-primary" name="btn_vector" value="Calculate" type="submit"></td>
           <td><input class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
         </tr>
         {% endfor %}

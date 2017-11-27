@@ -5,13 +5,11 @@
 """
 
 import os
-import copy
 import json
-import pdb
 
 import numpy as np
 
-from gfa.gnss_analysis.loadGPS import format_csn, format_model
+from gfa.gnss_analysis.loadGPS import format_model
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 from gfa.gnss_analysis.TimeSeriesControl import TimeSeriesControl
 
@@ -76,21 +74,24 @@ class ModelControl(TimeSeriesControl):
 
             # calcula y guarda modelo de trayectoria
             mdesp_e, res_e = model.modelo_trayectoria(estac[1][1])
-            model.save_components(self.save_model, estac[0], '_e')
             modelo_e = model.total
 
             mdesp_n, res_n = model.modelo_trayectoria(estac[1][2])
-            model.save_components(self.save_model, estac[0], '_n')
             modelo_n = model.total
 
             mdesp_u, res_u = model.modelo_trayectoria(estac[1][3])
-            model.save_components(self.save_model, estac[0], '_z')
             modelo_u = model.total
 
             # save txt model files
-            savearray = [estac[1][0], modelo_e, modelo_n, modelo_u]
+            savearray = [estac[1][0], modelo_e, modelo_n, modelo_u,
+                         mdesp_e[0], mdesp_n[0], mdesp_u[0],
+                         mdesp_e[1], mdesp_n[1], mdesp_u[1],
+                         mdesp_e[2], mdesp_n[2], mdesp_u[2],
+                         mdesp_e[3], mdesp_n[3], mdesp_u[3]]
             savearray = np.array(savearray).T
-            head = 'time[yr], Est[mm], North[mm], Vertical[mm]'
+            head = 'Time[yr], Est[mm], North[mm], Vertical[mm],\
+ Poly_e, Poly_n, Poly_z, Jump_e, Jump_n, Jump_z, Fourier_e, Fourier_n,\
+  Fourier_z, Log_e, Log_n, Log_z'
             file_estac = '{}{}.txt'.format(self.save_model, estac[0])
             np.savetxt(file_estac, savearray, '%12.8f', header=head)
 
@@ -144,7 +145,6 @@ class ModelControl(TimeSeriesControl):
         # Carga de datos
         data, lista = format_model(lon, lat, intervalo, self.lista_estac,
                                    self.dir_series)
-
         self.data = data
         self.lista = lista
 
@@ -201,8 +201,6 @@ class ModelControl(TimeSeriesControl):
         """
         Guarda los datos cargados por load_estation
         """
-        lista_estac = np.array(self.lista).T
-        # guardar lista de estaciones
         head = 'estation    longitude    latitude    Parameters    Error'
         np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
                    self.lista, fmt='%s', header=head, delimiter='    ')

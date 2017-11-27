@@ -73,9 +73,9 @@ def homepage():
                 vectordata = np.loadtxt(vector_file, delimiter="    ",
                                         usecols=[0, 2, 3, 4, 8, 9],
                                         skiprows=1, dtype=bytes).astype(str)
-                #
+
                 # join vector data with the rest of the data
-                vectordata = [v[0], v[1]]
+                print(vectordata)
 
         else:
             alldata = []
@@ -149,24 +149,42 @@ def plots_v(station):
         return 'error'
 
 
-@app.route('/vector/<station>')
-def vector(station):
+@app.route('/vector/', methods=['POST', 'GET'])
+def vector():
     """
     Calculate velocity vectors for the station 'station'
     """
-    return
+    try:
+        if request.method == 'POST' and request.form['btn_vector'] == 'Calculate':
+            ve = float(request.form['v_e'])
+            vn = float(request.form['v_n'])
+            vz = float(request.form['v_z'])
+            tv1 = float(request.form['t1'])
+            tv2 = float(request.form['t2'])
+            station = float(request.form['stationname'])
+
+            #middle = MiddleLayer(username)
+            # middle.middle_select(station, ve, vn, vz, tv1, tv2)
+            flash('{} vector sucessfull'.format(station))
+    except:
+        flash('error vector')
+    return redirect(url_for('homepage'))
 
 
-@app.route('/download/')
+@app.route('/download')
 def download():
     """
     zip the files in the user directory
     """
     output_dir = Config.config['PATH']['output_dir']
     os.chdir(output_dir)
-    zf = zipfile.ZipFile('{}/yourcooldata.zip'.format(username),
-                         mode='w')
+    # check if zipfile exists
+    if os.path.isfile('{}/yourcooldata.zip'.format(username)):
+        os.remove('{}/yourcooldata.zip'.format(username))
+
     try:
+        zf = zipfile.ZipFile('{}/yourcooldata.zip'.format(username),
+                             mode='w')
         zf.write('{}/series_lista.txt'.format(username), 'list_series.txt')
         zf.write('{}/modelo_lista.txt'.format(username), 'list_model.txt')
 
@@ -183,9 +201,8 @@ def download():
         if os.path.isfile(vectorfile):
             zf.write(vectorfile, vectorfile)
         zf.close()
-        return send_from_directory('{}{}'.format(output_dir, username),
-                                   'yourcooldata{}.zip'.format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
-                                   as_attachment=True)
+        return send_file('{}{}/yourcooldata.zip'.format(output_dir,username),
+                         as_attachment=True)
 
     except FileNotFoundError as e:
         print(e)

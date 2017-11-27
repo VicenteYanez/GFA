@@ -80,8 +80,6 @@ class TimeSeriesControl():
         """
         Guarda los datos cargados por load_estation
         """
-        lista_estac = np.array(self.lista).T
-        # guardar lista de estaciones
         head = 'estation,    longitude,    latitude'
         np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
                    self.lista, fmt='%s', header=head)
@@ -96,6 +94,5 @@ Vertical'
         for estacion in self.data:
             save = np.array(estacion[1]).T
             np.savetxt('{}{}.txt'.format(save_series, estacion[0]), save,
-                       fmt='%s',
-                       header=head)
+                       fmt='%s', header=head)
         return

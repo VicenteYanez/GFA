@@ -164,12 +164,24 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
     ### Output
     * data = lenght x nº of stations
 
-                    data[0] : ['name estation', [0, ..., 6]]
-                    Where 0 to 6:
+                    data[0] : ['name estation', [0, ..., 15]]
+                    Where 0 to 15:
                         0. time
                         1. East desplacement
                         2. North desplacement
                         3. Vertical desplacement
+                        4. Component Poly East
+                        5. Component Poly North
+                        6. Component Poly Vertical
+                        7. Component Jump East
+                        8. Component Jump North
+                        9. Component Jump Vertical
+                        10. Component Fourier East
+                        11. Component Fourier North
+                        12. Component Fourier Vertical
+                        13. Component Log East
+                        14. Component Log North
+                        15. Component Log Vertical
                     example:
                         data[4][1][2] : north desplacment of station number 4
                         data[4][0]    : name of station number 4
@@ -204,7 +216,7 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
             continue
         # ###################################################
 
-        # path estacion i, para cada eje
+        # path station
         dir_estac = "{}{}.txt".format(path_series, estacion)
 
         # verifica que exista la estacion
@@ -215,17 +227,10 @@ def format_model(lon, lat, intervalo, estac_list, path_series):
         stinfo = os.stat(dir_estac)
         if stinfo.st_size > 60:
             # abrir archivos de estacion
-            data_estac = np.loadtxt(dir_estac, usecols=(0, 1, 2, 3),
-                                    dtype=float, skiprows=1)
-            # carga de datos
-            tiempo = data_estac.T[0]
-            desp_e = data_estac.T[1]
-            desp_n = data_estac.T[2]
-            desp_u = data_estac.T[3]
+            data_estac = np.loadtxt(dir_estac, dtype=float, skiprows=1)
 
-        data_temp = np.array([tiempo, desp_e, desp_n, desp_u]).T
         # select by time
-        data_temp2 = select_time(data_temp, intervalo)
+        data_temp2 = select_time(data_estac, intervalo)
 
         # si se tienen menos de 10 mediciones descarta la estacion
         if len(data_temp2) < 10:

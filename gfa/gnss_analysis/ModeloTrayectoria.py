@@ -222,13 +222,13 @@ class ModeloTrayectoria():
         res_nf = np.matrix(modelo[:, n2:n3])*np.matrix(parametros[n2:n3]).T
         res_nl = np.matrix(modelo[:, n3:n4])*np.matrix(parametros[n3:n4]).T
         # suma cada componente para el resultado final
-        res_nt = np.array(res_nt)
-        res_nj = np.array(res_nj)
-        res_nf = np.array(res_nf)
-        res_nl = np.array(res_nl)
+        res_nt = np.array(res_nt).T[0]
+        res_nj = np.array(res_nj).T[0]
+        res_nf = np.array(res_nf).T[0]
+        res_nl = np.array(res_nl).T[0]
 
         self.resultado = [res_nt, res_nj, res_nf, res_nl]
-        self.total = res_nt.T[0] + res_nj.T[0] + res_nf.T[0] + res_nl.T[0]
+        self.total = res_nt + res_nj + res_nf + res_nl
 
         return self.resultado, residual
 
@@ -244,7 +244,6 @@ class ModeloTrayectoria():
 
         Guarda archivos con dos columnas: tiempo  desplazamiento
         """
-        array_guardado = []
         nt_guardar = []
         nf_guardar = []
         nl_guardar = []
