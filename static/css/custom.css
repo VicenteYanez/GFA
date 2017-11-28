@@ -1,12 +1,13 @@
 .header {
-    margin-top: 3rem;
     text-align: right;
+    background-color: black;
+    color: white;
 }
 .footer {
     margin-top: 3rem;
     text-align: center;
     min-width: 100%;
-    background-color: #6e0900ff;
+    background-color: black;
     color: white;
     bottom: -15%;
     position: absolute;

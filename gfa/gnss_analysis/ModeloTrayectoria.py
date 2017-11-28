@@ -229,6 +229,7 @@ class ModeloTrayectoria():
 
         self.resultado = [res_nt, res_nj, res_nf, res_nl]
         self.total = res_nt + res_nj + res_nf + res_nl
+        self.m_components = parametros
 
         return self.resultado, residual
 

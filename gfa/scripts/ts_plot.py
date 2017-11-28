@@ -12,17 +12,10 @@ is plot.
 [4] If the forth parameter is -v, the velocity vector is plot
 """
 
-import sys
-import os
-import pdb
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 from gfa.gnss_analysis.loadGPS import load1stations
 from gfa.gnss_analysis.model_accions import load_vector
 import gfa.gnss_analysis.fun_tsplot as pltfun
-import gfa.log_config as log
+from gfa.log_config import Logger
 from gfa.load_param import Config
 
 
@@ -64,6 +57,7 @@ def main(codigo, station, addmodel, addvector):
             print('Vector added')
         except FileNotFoundError as err:
             print("Error: Vector file not found")
+            log = Logger()
             log.logger.error(err)
 
     else:

@@ -8,8 +8,9 @@ import zipfile
 
 from flask import Flask, render_template, flash, redirect, request, url_for, send_file
 import numpy as np
+import pandas as pd
 
-import gfa.log_config as log
+from gfa.log_config import Logger
 from MiddleLayer import MiddleLayer
 from gfa.load_param import Config
 
@@ -63,29 +64,38 @@ def homepage():
             log_sc = [s["Escala curva log"] for s in parameters]
 
             # list with the station name and its parameters
-            alldata = [data[0], data[1], data[2], poly, jumps, fourier,
-                       log_i, log_sc]
-            alldata = [list(x) for x in zip(*alldata)]  # transpose data
+            sta_param = [data[0], data[1], data[2], poly, jumps, fourier,
+                         log_i, log_sc]
+            sta_param = [list(x) for x in zip(*sta_param)]  # transpose data
             latlon = np.array([data[1], data[2]]).T.astype(float)
+
+            df = pd.DataFrame(sta_param, columns=['station', 'longitude',
+                                                  'latitude', 'polynomial',
+                                                  'jumps', 'fourier',
+                                                  'log start', 'log scale'])
 
             if os.path.isfile(vector_file):
                 # load the vector data if there is a vector file
                 vectordata = np.loadtxt(vector_file, delimiter="    ",
                                         usecols=[0, 2, 3, 4, 8, 9],
                                         skiprows=1, dtype=bytes).astype(str)
+                vector_df = pd.DataFrame(vectordata, columns=['station',
+                                                              've', 'vn', 'vz',
+                                                              't1', 't2'])
+                df = pd.merge(df, vector_df, how='left', on='station')
 
-                # join vector data with the rest of the data
-                print(vectordata)
 
         else:
-            alldata = []
+            sta_param = []
+            latlon = []
 
-        return render_template("index.html", stations=alldata, latlon=latlon,
+        return render_template("index.html", stations=sta_param, latlon=latlon,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
         error = 'Exception. Please, check your query. If the error repeats \
 contact the admin'
+        log = Logger()
         log.logger.error(e)
         flash(error)
     return render_template("index.html", stations=[])
@@ -128,6 +138,7 @@ def plots(station):
         # cache_timeout should stop that t
         return send_file(filename)
     except (ValueError, IOError) as e:
+        log = Logger()
         log.logger.error(e)
         flash('Sorry, error ploting {}'.format(station))
         return 'error'
@@ -144,6 +155,7 @@ def plots_v(station):
         # cache_timeout should stop that t
         return send_file(filename)
     except (ValueError, IOError) as e:
+        log = Logger()
         log.logger.error(e)
         flash('Sorry, error ploting {}'.format(station))
         return 'error'
@@ -205,7 +217,8 @@ def download():
                          as_attachment=True)
 
     except FileNotFoundError as e:
-        print(e)
+        log = Logger()
+        log.logger.error(e)
         flash('error retreaving the zip file')
         return redirect(url_for('homepage'))
 

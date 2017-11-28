@@ -2,13 +2,11 @@
 
 import copy
 import os
-import pdb
 import json
 
 import numpy as np
 
 from gfa.gnss_analysis import fun_vector
-from gfa.gnss_analysis import fun_datos
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 
 """

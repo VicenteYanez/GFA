@@ -168,7 +168,7 @@
           <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76">
           <label for="lonmax">Maximum</label>
           <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64">
-          <input class="button-primary" name="btn_select_analysis" value="Select" type="submit">
+          <input class="button-primary" name="btn_select_analysis" value="Plot" type="submit">
           <h4>Metodology</h4>
           <input type="radio" name="metodology" value="interpol"> Vector interpolation
           <br />
@@ -179,14 +179,14 @@
 </div>
 <br>
 <div class="row">
-  <div class="nine columns">
+  <div class="ten columns">
     <div class="tabbar">
       <button class="tabbar-button" onclick="openTab('Model', 'tabs2')">Model tools</button>
       <button class="tabbar-button" onclick="openTab('Vectors', 'tabs2')">Vectors</button>
     </div>
   </div>
-  <div class="three columns">
-    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" style="text-align: right" type="submit" value="Download Data">
+  <div class="two columns">
+    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" type="submit" value="Download Data">
   </div>
   <hr>
 </div>
@@ -236,12 +236,12 @@
     <table>
       <thead>
         <tr>
-          <th style="width:20%">Stations</th>
+          <th style="width:10%">Stations</th>
           <th style="width:15%">East Velocity</th>
           <th style="width:15%">North Velocity</th>
           <th style="width:15%">Vertical Velocity</th>
-          <th style="width:10%">Start</th>
-          <th style="width:10%">End</th>
+          <th style="width:15%">Start</th>
+          <th style="width:15%">End</th>
           <th style="width:10%"></th>
           <th style="width:10%"></th>
         </tr>
@@ -260,7 +260,7 @@
           <td><input class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
         </tr>
         {% endfor %}
-      </body>
+      </tbody>
     </table>
     </div>
   </div>

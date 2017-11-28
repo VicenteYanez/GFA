@@ -8,7 +8,14 @@ Simple script for config the log file
 
 import logging
 
+from gfa.load_param import Config
+
+
 # login config
-logging.basicConfig(filename='../gfa.log', level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-logger = logging.getLogger(__name__)
+class Logger():
+    def __init__(self):
+        outputdir = Config.config['PATH']['output_dir']
+        logging.basicConfig(filename='{}gfa.log'.format(outputdir),
+                            level=logging.DEBUG,
+                            format='%(asctime)s %(levelname)s %(name)s %(message)s')
+        self.logger = logging.getLogger(__name__)

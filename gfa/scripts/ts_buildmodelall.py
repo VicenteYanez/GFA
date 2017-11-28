@@ -13,7 +13,6 @@ import numpy as np
 
 from gfa.gnss_analysis.ModelControl import ModelControl
 from gfa.load_param import Config
-import gfa.log_config as log
 
 
 def main():

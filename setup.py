@@ -21,7 +21,7 @@ field, using Davis & Titus (2011) and Bevis & Brown (2014) papers.',
       packages=find_packages(),
       install_requires=[
           'numpy', 'scipy', 'matplotlib', 'cartopy', 'click', 'flask',
-          'zipfile'
+          'pandas'
       ],
       entry_points={
         'console_scripts': ['gfa=gfa.scripts.gfa:cli']

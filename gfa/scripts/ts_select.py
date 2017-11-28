@@ -6,17 +6,14 @@
 Extract the time series data giving a certain time range and area
 
 """
-import sys
 import os
-import numpy as np
-import pdb
 import shutil
 
 
 from gfa.gnss_analysis.TimeSeriesControl import TimeSeriesControl
 from gfa.gnss_analysis.ModelControl import ModelControl
 from gfa.load_param import Config
-import gfa.log_config as log
+from gfa.log_config import Logger
 
 
 def main(codigo, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
@@ -27,6 +24,7 @@ def main(codigo, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
     except(ValueError, IndexError) as err:
         print('A wild error had raised when GFA was reading the parameters!\
      Please, check your input parameter and restart the script')
+        log = Logger()
         log.logger.error(err)
         exit()
 
@@ -63,4 +61,5 @@ def main(codigo, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
     except() as err:
         print('A wild error had raised! Please, check your input param or go\
               and see the log')
+        log = Logger()
         log.logger.error(err)
