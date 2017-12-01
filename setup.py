@@ -19,11 +19,13 @@ field, using Davis & Titus (2011) and Bevis & Brown (2014) papers.',
       author_email='vicenteyanez@protonmail.com',
       license='GLP-3',
       packages=find_packages(),
+      include_package_data=True,
       install_requires=[
           'numpy', 'scipy', 'matplotlib', 'cartopy', 'click', 'flask',
           'pandas'
       ],
       entry_points={
-        'console_scripts': ['gfa=gfa.scripts.gfa:cli']
+        'console_scripts': ['gfa=gfa.scripts.gfa:cli',
+                            'gfa_gui=gfa.flask_app:run']
         },
       zip_safe=False)

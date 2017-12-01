@@ -1,11 +1,13 @@
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 import time
 import os
 import shutil
+import json
 
 import numpy as np
 from flask import flash
+import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
@@ -105,5 +107,72 @@ contact the admin')
 
         return output_plot
 
-    def middle_vector(self):
+    def middle_vector(self, station, ti, tf):
+        """
+
+        """
+
+        ti = datetime.strptime(ti, "%Y-%m-%d")
+        tf = datetime.strptime(tf, "%Y-%m-%d")
+
+        # time format transform
+        ti = float(toYearFraction(ti))
+        tf = float(toYearFraction(tf))
+
+        # check value of time
+        # parameter vtype is for ts_vector() function
+        if ti > tf:
+            print(ti, tf)
+            raise ValueError
+        elif ti == tf:
+            vtype = 'tangent'
+        elif ti != tf:
+            vtype = 'fit'
+
+        from gfa.scripts import ts_vector
+        ts_vector.main(self.user, station, vtype, [ti, tf])
+
         return
+
+
+def load_vectors(df, vector_file):
+    """
+    Loads the vector file and join it with the rest of the statio data
+    """
+    vectordata = np.loadtxt(vector_file, delimiter="    ",
+                            usecols=[0, 2, 3, 4, 8, 9],
+                            skiprows=1, dtype=bytes).astype(str)
+    vector_df = pd.DataFrame(vectordata, columns=['station',
+                                                  've', 'vn', 'vz',
+                                                  't1', 't2'])
+    df = pd.merge(df, vector_df, how='left', on='station')
+
+    return df
+
+
+def load_model(model_list_file):
+    """
+    Load the model list file
+    """
+    # loads name of stations and json with the parameters
+    data = np.loadtxt(model_list_file, delimiter="    ",
+                      skiprows=1, dtype=bytes).astype(str).T
+    # json parameters to dictionary
+    parameters = [json.loads(parameter) for parameter in data[3]]
+    poly = [p["polinomio"] for p in parameters]
+    jumps = [j["saltos"] for j in parameters]
+    fourier = [f["Periodos Fourier"] for f in parameters]
+    log_i = [l["Inicio log"] for l in parameters]
+    log_sc = [s["Escala curva log"] for s in parameters]
+
+    # list with the station name and its parameters
+    sta_param = [data[0], data[1], data[2], poly, jumps, fourier,
+                 log_i, log_sc]
+    sta_param = [list(x) for x in zip(*sta_param)]  # transpose data
+    latlon = np.array([data[1], data[2]]).T.astype(float)
+
+    df = pd.DataFrame(sta_param, columns=['station', 'longitude',
+                                          'latitude', 'polynomial',
+                                          'jumps', 'fourier',
+                                          'log start', 'log scale'])
+    return latlon, df, sta_param

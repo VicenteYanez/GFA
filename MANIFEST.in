@@ -1,1 +1,3 @@
 include README.md
+recursive-include gfa/templates/ *
+recursive-include gfa/static/ *

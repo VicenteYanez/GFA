@@ -237,11 +237,9 @@
       <thead>
         <tr>
           <th style="width:10%">Stations</th>
-          <th style="width:15%">East Velocity</th>
-          <th style="width:15%">North Velocity</th>
-          <th style="width:15%">Vertical Velocity</th>
-          <th style="width:15%">Start</th>
-          <th style="width:15%">End</th>
+          <th style="width:20%">Velocity</th>
+          <th style="width:25%">Start</th>
+          <th style="width:25%">End</th>
           <th style="width:10%"></th>
           <th style="width:10%"></th>
         </tr>
@@ -251,11 +249,9 @@
         <tr>
           <form action="{{url_for('vector')}}", method="post">
           <td>{{ station[0] }}<input type="hidden" name="stationname" value="{{ station[0]}}"></td>
-          <td><input style="width:100%" type="text" name="v_e" value=""></td>
-          <td><input style="width:100%" type="text" name="v_n" value=""></td>
-          <td><input style="width:100%" type="text" name="v_z" value=""></td>
-          <td><input style="width:100%" type="text" name="t1" value=""></td>
-          <td><input style="width:100%" type="text" name="t2" value=""></td>
+          <td>Ve: <> Vn: <> Vz:<> </td>
+          <td><input style="width:100%" type="text" name="t1" value="2005-01-01"></td>
+          <td><input style="width:100%" type="text" name="t2" value="2005-01-01"></td>
           <td><input class="button-primary" name="btn_vector" value="Calculate" type="submit"></td>
           <td><input class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
         </tr>

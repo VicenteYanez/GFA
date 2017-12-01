@@ -1,21 +1,22 @@
 
 # A very simple Flask Hello World app for you to get started with...
 
-import json
 import os
 from time import gmtime, strftime
 import zipfile
 
 from flask import Flask, render_template, flash, redirect, request, url_for, send_file
 import numpy as np
-import pandas as pd
 
 from gfa.log_config import Logger
-from MiddleLayer import MiddleLayer
+from gfa.MiddleLayer import MiddleLayer, load_model, load_vectors
 from gfa.load_param import Config
 
 
-app = Flask(__name__)
+filedir = os.path.dirname(os.path.realpath(__file__))
+
+app = Flask(__name__, static_folder='{}/../static'.format(filedir),
+            template_folder='{}/../templates'.format(filedir))
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
 
@@ -52,38 +53,11 @@ def homepage():
 
         if os.path.isfile(model_list_file):
             # if there is data, load it
-            # loads name of stations and json with the parameters
-            data = np.loadtxt(model_list_file, delimiter="    ",
-                              skiprows=1, dtype=bytes).astype(str).T
-            # json parameters to dictionary
-            parameters = [json.loads(parameter) for parameter in data[3]]
-            poly = [p["polinomio"] for p in parameters]
-            jumps = [j["saltos"] for j in parameters]
-            fourier = [f["Periodos Fourier"] for f in parameters]
-            log_i = [l["Inicio log"] for l in parameters]
-            log_sc = [s["Escala curva log"] for s in parameters]
-
-            # list with the station name and its parameters
-            sta_param = [data[0], data[1], data[2], poly, jumps, fourier,
-                         log_i, log_sc]
-            sta_param = [list(x) for x in zip(*sta_param)]  # transpose data
-            latlon = np.array([data[1], data[2]]).T.astype(float)
-
-            df = pd.DataFrame(sta_param, columns=['station', 'longitude',
-                                                  'latitude', 'polynomial',
-                                                  'jumps', 'fourier',
-                                                  'log start', 'log scale'])
+            latlon, df, sta_param = load_model(model_list_file)
 
             if os.path.isfile(vector_file):
                 # load the vector data if there is a vector file
-                vectordata = np.loadtxt(vector_file, delimiter="    ",
-                                        usecols=[0, 2, 3, 4, 8, 9],
-                                        skiprows=1, dtype=bytes).astype(str)
-                vector_df = pd.DataFrame(vectordata, columns=['station',
-                                                              've', 'vn', 'vz',
-                                                              't1', 't2'])
-                df = pd.merge(df, vector_df, how='left', on='station')
-
+                df2 = load_vectors(df, vector_file)
 
         else:
             sta_param = []
@@ -168,18 +142,17 @@ def vector():
     """
     try:
         if request.method == 'POST' and request.form['btn_vector'] == 'Calculate':
-            ve = float(request.form['v_e'])
-            vn = float(request.form['v_n'])
-            vz = float(request.form['v_z'])
-            tv1 = float(request.form['t1'])
-            tv2 = float(request.form['t2'])
-            station = float(request.form['stationname'])
+            tv1 = request.form['t1']
+            tv2 = request.form['t2']
+            station = request.form['stationname']
 
-            #middle = MiddleLayer(username)
-            # middle.middle_select(station, ve, vn, vz, tv1, tv2)
+            middle = MiddleLayer(username)
+            middle.middle_vector(station, tv1, tv2)
             flash('{} vector sucessfull'.format(station))
-    except:
-        flash('error vector')
+    except ValueError as e:
+        log = Logger()
+        log.logger.error(e)
+        flash('Start time should be lower than the end time')
     return redirect(url_for('homepage'))
 
 
@@ -221,6 +194,11 @@ def download():
         log.logger.error(e)
         flash('error retreaving the zip file')
         return redirect(url_for('homepage'))
+
+
+# run function
+def run():
+    app.run()
 
 
 if __name__ == "__main__":
