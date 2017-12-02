@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import os
 import shutil
@@ -11,6 +11,7 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
+from gfa.gnss_analysis.model_accions import load_vector
 
 """
 This is a ugly file
@@ -37,6 +38,34 @@ def toYearFraction(date):
     fraction = yearElapsed/yearDuration
 
     return date.year + fraction
+
+
+def convert_partial_year(number):
+    """
+    Function to pass from fractional years to datetime object
+    """
+    year = int(number)
+    d = timedelta(days=(number - year)*(365 + is_leap(year)))
+    day_one = datetime(year, 1, 1)
+    date = d + day_one
+    return date
+
+
+def is_leap(year):
+    """
+    function than returns 1 if the year is leap, and 0 if it doesn't.
+
+    it is use in convert_partial_year function
+    """
+    if year % 4 != 0:
+        leap = 0
+    elif year % 100 != 0:
+        leap = 1
+    elif year % 400 != 0:
+        leap = 0
+    else:
+        leap = 1
+    return leap
 
 
 class MiddleLayer():
@@ -111,7 +140,6 @@ contact the admin')
         """
 
         """
-
         ti = datetime.strptime(ti, "%Y-%m-%d")
         tf = datetime.strptime(tf, "%Y-%m-%d")
 
@@ -139,15 +167,17 @@ def load_vectors(df, vector_file):
     """
     Loads the vector file and join it with the rest of the statio data
     """
-    vectordata = np.loadtxt(vector_file, delimiter="    ",
-                            usecols=[0, 2, 3, 4, 8, 9],
-                            skiprows=1, dtype=bytes).astype(str)
-    vector_df = pd.DataFrame(vectordata, columns=['station',
-                                                  've', 'vn', 'vz',
-                                                  't1', 't2'])
-    df = pd.merge(df, vector_df, how='left', on='station')
+    vector_df = pd.read_csv(vector_file)
+    # change the format of date
+    for i, start in enumerate(vector_df['start_time']):
+        # check if i date is not nan
+        print(type(vector_df['start_time'][i]))
+        if vector_df['start_time'][i] is not np.float('nan'):
+            vector_df['start_time'][i] = convert_partial_year(vector_df['start_time'][i]).strftime('%Y-%m-%d')
+            vector_df['end_time'][i] = convert_partial_year(vector_df['end_time'][i]).strftime('%Y-%m-%d')
+    result_df = pd.merge(df, vector_df, on='station', how='left')
 
-    return df
+    return result_df
 
 
 def load_model(model_list_file):

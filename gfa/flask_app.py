@@ -57,13 +57,12 @@ def homepage():
 
             if os.path.isfile(vector_file):
                 # load the vector data if there is a vector file
-                df2 = load_vectors(df, vector_file)
-
+                df = load_vectors(df, vector_file)
         else:
-            sta_param = []
+            df = []
             latlon = []
 
-        return render_template("index.html", stations=sta_param, latlon=latlon,
+        return render_template("index.html", stations=np.array(df), latlon=latlon,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:

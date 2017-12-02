@@ -5,6 +5,7 @@ import os
 import json
 
 import numpy as np
+import pandas as pd
 
 from gfa.gnss_analysis import fun_vector
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
@@ -67,10 +68,10 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     a velocity vector, depending of the . And finally saves the
     the vector in vectors.txt file.
     Input
-    aux: its value depends of the vector_type variable.
-        If it is fit:
+    aux: Its value depends of the vector_type variable.
+        If it is "fit":
             Time range for the lineal fit (list of lenght 2)
-        If it is tangent:
+        If it is "tangent":
             location of the tangent line (float)
     """
     modelo = np.loadtxt(file_modelo).T
@@ -84,7 +85,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
         # Si la serie no contiene el tiempo t, regresa falso
         if modelo[0][len(modelo[0])-1] < float(t0):
             print('Error, station do not have the time {}'.format(t0))
-            return
+            return False
 
         vector, c = fun_vector.tangente(t0, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
@@ -96,7 +97,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
         # Si la serie no contiene el tiempo t, regresa falso
         if modelo[0][len(modelo[0])-1] < float(trange[0]):
             print('Error, station do not have the time {}'.format(t0))
-            return
+            return False
 
         vector, c, err = fun_vector.fit(trange, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
@@ -105,28 +106,33 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     elif vector_type == 'trending':
         print("not implemented yet")
     else:
-        print("tipo de vector no seleccionado")
+        print("vector type don't selected")
         return
 
     # si vector está vacio retornar false
     if vector is False:
         return False
 
-    # GUARDAR VECTOR ######################################################
-    # incorporar nombre de estacion a array para guardar
-    save_vector = np.hstack(([estacion, vector_type], vector, c, t1, t2))
-    header = "estation    vector_type    Ve    Vn    Vz   Ce    Cn    Cz   t1 \
-   t2"
-
-    # guardar vector estacion
+    # SAVE VECTOR ######################################################
+    # create dataframe with the new data
+    savedf = pd.DataFrame({'station': [estacion], 'vector_type': [vector_type],
+                           'vector_e': [vector[0]], 'vector_n': [vector[1]],
+                           'vector_z': [vector[2]], 'residual_e': [c[0]],
+                           'residual_n': [c[1]], 'residual_z': [c[2]],
+                           'start_time': [t1], 'end_time': [t2]})
+    # order columns
+    savedf = savedf[['station', 'vector_type', 'vector_e', 'vector_n',
+                     'vector_z', 'residual_e', 'residual_n', 'residual_z',
+                     'start_time', 'end_time']]
+    # add it with the previus data
     if os.path.isfile(vector_file):
-        vectores = np.loadtxt(vector_file, dtype=bytes).astype(str)
-        vectores = np.vstack((vectores, save_vector))
-        np.savetxt(vector_file, vectores, fmt='%s', delimiter='    ',
-                   header=header)
+        old_data = pd.read_csv(vector_file)
+        new_data = old_data.append(savedf)
+        new_data.to_csv(vector_file, index=False)
+
     else:
-        np.savetxt(vector_file, [save_vector], fmt='%s', delimiter='    ',
-                   header=header)
+        # if there is no data saved previusly
+        savedf.to_csv(vector_file, index=False)
 
     return
 
@@ -165,23 +171,22 @@ def upgrade_list(estacion, parametros, residual, directory):
     return
 
 
-def load_vector(vectorfile, estation):
+def load_vector(vectorfile, station):
     """
     Function that load the vector from the vector.txt file
     """
-
-    estlist = np.loadtxt(vectorfile, usecols=[0], dtype=bytes,
+    estlist = np.loadtxt(vectorfile, usecols=[0], delimiter=',', dtype=bytes,
                          skiprows=1, ndmin=1).astype(str)
-    vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], skiprows=1, ndmin=2,
-                         dtype=float)
+    vectors = np.loadtxt(vectorfile, usecols=[2, 3, 4], delimiter=',',
+                         skiprows=1, ndmin=2, dtype=float)
     c = np.loadtxt(vectorfile, usecols=[5, 6, 7], skiprows=1, dtype=float,
-                   ndmin=2)
+                   ndmin=2, delimiter=',')
     t1t2 = np.loadtxt(vectorfile, usecols=[8, 9], skiprows=1, dtype=float,
-                      ndmin=2)
+                      ndmin=2, delimiter=',')
     data = []
     try:
         for i, est in enumerate(estlist):
-            if est == estation:
+            if est == station:
                 # list with t inicial and t final
                 # if vector=tangent, t inicial == t final
                 tmin_tmax = [t1t2[i][0], t1t2[i][-1]]

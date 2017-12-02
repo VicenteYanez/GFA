@@ -52,6 +52,12 @@ def main(codigo, station, addmodel, addvector):
         try:
             # load vectors
             vectors = load_vector(filevector, station)
+            # put the vector in place for t0 = 0 mm
+            for i, vector in enumerate(vectors):
+                vectors[i][1][0] = vector[1][0] - x0
+                vectors[i][1][1] = vector[1][1] - y0
+                vectors[i][1][2] = vector[1][2] - z0
+
             # plot
             f, axes = pltfun.add_velocity(f, axes, tsdata[1][0], vectors)
             print('Vector added')
