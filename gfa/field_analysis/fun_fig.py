@@ -153,7 +153,6 @@ def add_vector(figure, axes, x, y, vx, vy):
     return figure, axes
 
 
-
 def tensor_figure(x, y, evalue, evector):
     """
     Figure of example_principalstress.py

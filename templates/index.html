@@ -217,7 +217,7 @@
         {% for station in stations %}
         <tr>
           <form action="edit/{{ station[0] }}", method="post">
-          <td>{{ station[0] }}</td>
+          <td>{{ station[0] }}<br>Lon: {{ station[1] }}<br>Lat: {{ station[2] }}</td>
           <td><input style="width:100%" type="text" name="poly" value="{{ station[3] }}"></td>
           <td><input style="width:100%" type="text" name="jump" value="{{ station[4] }}"></td>
           <td><input style="width:100%" type="text" name="fourier" value="{{ station[5] }}"></td>
@@ -236,25 +236,23 @@
     <table>
       <thead>
         <tr>
-          <th style="width:10%">Stations</th>
-          <th style="width:20%">Velocity(East, Norh and Vertical)</th>
+          <th style="width:15%">Stations</th>
+          <th style="width:25%">Velocity(East, Norh and Vertical)</th>
           <th style="width:25%">Start(yyyy-mm-dd)</th>
           <th style="width:25%">End(yyyy-mm-dd)</th>
-          <th style="width:10%"></th>
           <th style="width:10%"></th>
         </tr>
       </thead>
       <tbody>
-        {% for station in stations %}
+        {% for station in vectors %}
         <tr>
-          <form action="{{url_for('vector')}}", method="post">
-          <td>{{ station[0] }}<input type="hidden" name="stationname" value="{{ station[0]}}"></td>
-          <td>Ve: {{ station[9] }} <br>Vn: {{ station[10] }} <br> Vz:{{ station[11] }} </td>
-          <td><input style="width:100%" type="text" name="t1" value="{{ station[15] }}"></td>
-          <td><input style="width:100%" type="text" name="t2" value="{{ station[16] }}"></td>
-          <td><input class="button-primary" name="btn_vector" value="Calculate" type="submit"></td>
-          </form>
-          <td><input class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
+          <form action="{{url_for('calc_vector')}}", method="post">
+          <td>{{ station[0] }}<br>Lon: {{ station[1] }}<br>Lat: {{ station[2] }}<input type="hidden" name="stationname" value="{{ station[0]}}"></td>
+          <td>Ve: {{ station[8] }} <br>Vn: {{ station[9] }} <br> Vz:{{ station[10] }} </td>
+          <td><input style="width:100%" type="text" name="t1" value="{{ station[11] }}"></td>
+          <td><input style="width:100%" type="text" name="t2" value="{{ station[12] }}"></td>
+          <td><input style="width:100%" class="button-primary" name="btn_vector" value="Calculate" type="submit">
+          </form><input style="width:100%" class="button-primary" value="Plot" onclick="window.open('plot-v/{{ station[0] }}?date={{ herenow }}','_blank')" type="submit"></td>
         </tr>
         {% endfor %}
       </tbody>

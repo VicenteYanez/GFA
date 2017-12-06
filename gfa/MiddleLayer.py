@@ -1,9 +1,10 @@
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import os
 import shutil
 import json
+import re
 
 import numpy as np
 from flask import flash
@@ -11,7 +12,9 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
-from gfa.gnss_analysis.model_accions import load_vector
+# from gfa.field_analysis.cardozo_vorticity import cardozo_vorticity
+from gfa.gnss_analysis.VectorData import VectorData
+
 
 """
 This is a ugly file
@@ -38,34 +41,6 @@ def toYearFraction(date):
     fraction = yearElapsed/yearDuration
 
     return date.year + fraction
-
-
-def convert_partial_year(number):
-    """
-    Function to pass from fractional years to datetime object
-    """
-    year = int(number)
-    d = timedelta(days=(number - year)*(365 + is_leap(year)))
-    day_one = datetime(year, 1, 1)
-    date = d + day_one
-    return date
-
-
-def is_leap(year):
-    """
-    function than returns 1 if the year is leap, and 0 if it doesn't.
-
-    it is use in convert_partial_year function
-    """
-    if year % 4 != 0:
-        leap = 0
-    elif year % 100 != 0:
-        leap = 1
-    elif year % 400 != 0:
-        leap = 0
-    else:
-        leap = 1
-    return leap
 
 
 class MiddleLayer():
@@ -136,48 +111,62 @@ contact the admin')
 
         return output_plot
 
-    def middle_vector(self, station, ti, tf):
+    def middle_vector(self, station, ti, tf, vector_file):
         """
 
         """
-        ti = datetime.strptime(ti, "%Y-%m-%d")
-        tf = datetime.strptime(tf, "%Y-%m-%d")
+        # ti and tf are a string with parenthesis, first of all
+        # we need to remove ir and turning they in a
+        # list of floats
+        ti = [float(toYearFraction(datetime.strptime(s, "'%Y-%m-%d'")))
+              for s in tf.replace("(", "").replace(")", "").split(',')]
+        tf = [float(toYearFraction(datetime.strptime(s, "'%Y-%m-%d'")))
+              for s in tf.replace("(", "").replace(")", "").split(',')]
+        if os.path.isfile(vector_file):
+            vdata = VectorData(vector_file)
+            tif, remove_times = vdata.check_time(station, ti, tf)
+        else:
+            tif = np.array([ti, tf]).T
+            remove_times = []
 
-        # time format transform
-        ti = float(toYearFraction(ti))
-        tf = float(toYearFraction(tf))
-
-        # check value of time
-        # parameter vtype is for ts_vector() function
-        if ti > tf:
-            print(ti, tf)
-            raise ValueError
-        elif ti == tf:
-            vtype = 'tangent'
-        elif ti != tf:
-            vtype = 'fit'
-
+        # calculate and save the vectors
         from gfa.scripts import ts_vector
-        ts_vector.main(self.user, station, vtype, [ti, tf])
+        for times in tif:
+            # check value of time
+            # parameter vtype is for ts_vector() function
+            if times[0] > times[1]:
+                raise ValueError
+            elif times[0] == times[1]:
+                vtype = 'tangent'
+            elif times[0] != times[1]:
+                vtype = 'fit'
+            ts_vector.main(self.user, station, vtype, [times[0], times[1]])
 
+        # remove the user erased vectors
+        # for times in remove_times:
+            #vdata.remove_vector(remove_times)
         return
 
+    def middle_vorticity(self, lon_range, lat_range, time_range):
+        """
+        # load vectors from file
 
-def load_vectors(df, vector_file):
-    """
-    Loads the vector file and join it with the rest of the statio data
-    """
-    vector_df = pd.read_csv(vector_file)
-    # change the format of date
-    for i, start in enumerate(vector_df['start_time']):
-        # check if i date is not nan
-        print(type(vector_df['start_time'][i]))
-        if vector_df['start_time'][i] is not np.float('nan'):
-            vector_df['start_time'][i] = convert_partial_year(vector_df['start_time'][i]).strftime('%Y-%m-%d')
-            vector_df['end_time'][i] = convert_partial_year(vector_df['end_time'][i]).strftime('%Y-%m-%d')
-    result_df = pd.merge(df, vector_df, on='station', how='left')
+        # select vectors from time and lat lon range
 
-    return result_df
+        datestring = str(time_range)
+
+        cardozo_vorticity(self.user_dir, x, y, ve, vn, lat_range, lon_range,
+                          datestring,)
+        """
+        return
+
+    def middle_vectortable(self, df, vector_file):
+        """
+        """
+        vdata = VectorData(vector_file)
+        vector_table = vdata.get_table(df)
+
+        return vector_table
 
 
 def load_model(model_list_file):
@@ -205,4 +194,4 @@ def load_model(model_list_file):
                                           'latitude', 'polynomial',
                                           'jumps', 'fourier',
                                           'log start', 'log scale'])
-    return latlon, df, sta_param
+    return latlon, df

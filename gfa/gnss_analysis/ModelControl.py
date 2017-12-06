@@ -114,7 +114,7 @@ class ModelControl(TimeSeriesControl):
             estac_pros.append(pos_estac2)
 
         # guardar txt con lista de estaciones solucionadas
-        head = 'estation,    longitude    latitude    Parameters    Error'
+        head = 'station,    longitude    latitude    Parameters    Error'
         np.savetxt('{}resume.txt'.format(self.savedir), estac_pros,
                    delimiter='    ', fmt='%s', header=head)
 
@@ -201,7 +201,7 @@ class ModelControl(TimeSeriesControl):
         """
         Guarda los datos cargados por load_estation
         """
-        head = 'estation    longitude    latitude    Parameters    Error'
+        head = 'station    longitude    latitude    Parameters    Error'
         np.savetxt('{}{}_lista.txt'.format(self.savedir, self.clas),
                    self.lista, fmt='%s', header=head, delimiter='    ')
 

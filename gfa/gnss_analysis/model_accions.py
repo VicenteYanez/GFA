@@ -117,12 +117,12 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     # create dataframe with the new data
     savedf = pd.DataFrame({'station': [estacion], 'vector_type': [vector_type],
                            'vector_e': [vector[0]], 'vector_n': [vector[1]],
-                           'vector_z': [vector[2]], 'residual_e': [c[0]],
-                           'residual_n': [c[1]], 'residual_z': [c[2]],
+                           'vector_z': [vector[2]], 'c_e': [c[0]],
+                           'c_n': [c[1]], 'c_z': [c[2]],
                            'start_time': [t1], 'end_time': [t2]})
     # order columns
     savedf = savedf[['station', 'vector_type', 'vector_e', 'vector_n',
-                     'vector_z', 'residual_e', 'residual_n', 'residual_z',
+                     'vector_z', 'c_e', 'c_n', 'c_z',
                      'start_time', 'end_time']]
     # add it with the previus data
     if os.path.isfile(vector_file):
@@ -159,7 +159,7 @@ def upgrade_list(estacion, parametros, residual, directory):
                 'Residual Z': residual[2].tolist()}
     parametros_json = json.dumps(parametros)
     residual_json = json.dumps(residual)
-    head = 'estation    longitude    latitude    Parameters    Error'
+    head = 'station    longitude    latitude    Parameters    Error'
     archivo = '{}modelo_lista.txt'.format(directory)
     data = np.loadtxt(archivo, dtype=bytes, delimiter='    ').astype(str)
     for i, row in enumerate(data):

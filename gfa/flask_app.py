@@ -4,12 +4,13 @@
 import os
 from time import gmtime, strftime
 import zipfile
+import copy
 
 from flask import Flask, render_template, flash, redirect, request, url_for, send_file
 import numpy as np
 
 from gfa.log_config import Logger
-from gfa.MiddleLayer import MiddleLayer, load_model, load_vectors
+from gfa.MiddleLayer import MiddleLayer, load_model
 from gfa.load_param import Config
 
 
@@ -51,18 +52,26 @@ def homepage():
             middle.middle_select(lonmin, lonmax, latmin, latmax, ti, tf)
             flash('finished the data loading')
 
-        if os.path.isfile(model_list_file):
+        if request.method == 'GET' and os.path.isfile(model_list_file):
             # if there is data, load it
-            latlon, df, sta_param = load_model(model_list_file)
-
+            latlon, df = load_model(model_list_file)
+            df_ = np.array(df)
+            # empty for the rest of the fields
+            df_withvectors = copy.deepcopy(df)
+            df_withvectors.assign(vector_e=np.nan, vector_n=np.nan,
+                                  vector_z=np.nan, start_time_str=np.nan,
+                                  end_time_str=np.nan)
+            df_withvectors = np.array(df_withvectors)
             if os.path.isfile(vector_file):
                 # load the vector data if there is a vector file
-                df = load_vectors(df, vector_file)
+                middle = MiddleLayer(username)
+                df_withvectors = middle.middle_vectortable(df, vector_file)
         else:
             df = []
             latlon = []
 
-        return render_template("index.html", stations=np.array(df), latlon=latlon,
+        return render_template("index.html", stations=df_,
+                               latlon=latlon, vectors=df_withvectors,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
@@ -135,10 +144,11 @@ def plots_v(station):
 
 
 @app.route('/vector/', methods=['POST', 'GET'])
-def vector():
+def calc_vector():
     """
     Calculate velocity vectors for the station 'station'
     """
+    vector_file = "{}/vectors.txt".format(userdir)
     try:
         if request.method == 'POST' and request.form['btn_vector'] == 'Calculate':
             tv1 = request.form['t1']
@@ -146,7 +156,7 @@ def vector():
             station = request.form['stationname']
 
             middle = MiddleLayer(username)
-            middle.middle_vector(station, tv1, tv2)
+            middle.middle_vector(station, tv1, tv2, vector_file)
             flash('{} vector sucessfull'.format(station))
     except ValueError as e:
         log = Logger()
