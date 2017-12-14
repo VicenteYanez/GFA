@@ -12,7 +12,7 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
-# from gfa.field_analysis.cardozo_vorticity import cardozo_vorticity
+from gfa.field_analysis.cardozo_vorticity import cardozo_vorticity
 from gfa.gnss_analysis.VectorData import VectorData
 
 
@@ -118,10 +118,10 @@ contact the admin')
         # ti and tf are a string with parenthesis, first of all
         # we need to remove ir and turning they in a
         # list of floats
-        ti = [float(toYearFraction(datetime.strptime(s, "'%Y-%m-%d'")))
-              for s in tf.replace("(", "").replace(")", "").split(',')]
-        tf = [float(toYearFraction(datetime.strptime(s, "'%Y-%m-%d'")))
-              for s in tf.replace("(", "").replace(")", "").split(',')]
+        ti = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
+              for s in ti.split(',')]
+        tf = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
+              for s in tf.split(',')]
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
             tif, remove_times = vdata.check_time(station, ti, tf)
@@ -138,26 +138,36 @@ contact the admin')
                 raise ValueError
             elif times[0] == times[1]:
                 vtype = 'tangent'
-            elif times[0] != times[1]:
+            elif times[0] < times[1]:
                 vtype = 'fit'
             ts_vector.main(self.user, station, vtype, [times[0], times[1]])
 
         # remove the user erased vectors
-        # for times in remove_times:
-            #vdata.remove_vector(remove_times)
+        for times in remove_times:
+            vdata.remove_vector(station, remove_times)
         return
 
-    def middle_vorticity(self, lon_range, lat_range, time_range):
-        """
+    def middle_field(self, model_list_file, vector_file, lon_range, lat_range,
+                     time_range, grid, alfa):
+        # read date
+        ti = datetime.strptime(time_range[0], "%Y-%m-%d")
+        tf = datetime.strptime(time_range[1], "%Y-%m-%d")
+
+        # load df with the position of the station
+        latlon, df = load_model(model_list_file)
+
         # load vectors from file
+        if os.path.isfile(vector_file):
+            vdata = VectorData(vector_file)
+            x, y, ve, vn = vdata.select(df, lon_range, lat_range, [ti, tf])
+            pngfile = "{}/field.png".format(self.user_dir)
+            if os.path.isfile(pngfile):
+                os.remove(pngfile)
+            cardozo_vorticity(self.user_dir, x, y, ve, vn,
+                              lat_range, lon_range, grid, alfa)
+        else:
+            flash('no vector file, please calculate some vectors first!')
 
-        # select vectors from time and lat lon range
-
-        datestring = str(time_range)
-
-        cardozo_vorticity(self.user_dir, x, y, ve, vn, lat_range, lon_range,
-                          datestring,)
-        """
         return
 
     def middle_vectortable(self, df, vector_file):
@@ -194,4 +204,7 @@ def load_model(model_list_file):
                                           'latitude', 'polynomial',
                                           'jumps', 'fourier',
                                           'log start', 'log scale'])
+    df['longitude'] = df['longitude'].apply(
+        lambda x: '{0:.3f}'.format(float(x)))
+    df['latitude'] = df['latitude'].apply(lambda x: '{0:.3f}'.format(float(x)))
     return latlon, df

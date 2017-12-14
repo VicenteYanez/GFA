@@ -127,6 +127,9 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     # add it with the previus data
     if os.path.isfile(vector_file):
         old_data = pd.read_csv(vector_file)
+        old_data = old_data[['station', 'vector_type', 'vector_e', 'vector_n',
+                             'vector_z', 'c_e', 'c_n', 'c_z',
+                             'start_time', 'end_time']]
         new_data = old_data.append(savedf)
         new_data.to_csv(vector_file, index=False)
 

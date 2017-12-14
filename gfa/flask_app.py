@@ -52,7 +52,7 @@ def homepage():
             middle.middle_select(lonmin, lonmax, latmin, latmax, ti, tf)
             flash('finished the data loading')
 
-        if request.method == 'GET' and os.path.isfile(model_list_file):
+        if os.path.isfile(model_list_file):
             # if there is data, load it
             latlon, df = load_model(model_list_file)
             df_ = np.array(df)
@@ -67,7 +67,7 @@ def homepage():
                 middle = MiddleLayer(username)
                 df_withvectors = middle.middle_vectortable(df, vector_file)
         else:
-            df = []
+            df_ = []
             latlon = []
 
         return render_template("index.html", stations=df_,
@@ -95,10 +95,14 @@ def edit(station):
     """
     # transform input to a list with floats
     new_poly = int(request.form['poly'])
-    new_jump = list(np.array([x for x in request.form['jump'].strip('[]').split(',') if x != '']).astype(float))
-    new_fourier = list(np.array([x for x in request.form['fourier'].strip('[]').split(',') if x != '']).astype(float))
-    new_logstart = list(np.array([x for x in request.form['logstart'].strip('[]').split(',') if x != '']).astype(float))
-    new_logscale = list(np.array([x for x in request.form['logscale'].strip('[]').split(',') if x != '']).astype(float))
+    new_jump = list(np.array([x for x in request.form['jump'].strip(
+        '[]').split(',') if x != '']).astype(float))
+    new_fourier = list(np.array([x for x in request.form['fourier'].strip(
+        '[]').split(',') if x != '']).astype(float))
+    new_logstart = list(np.array([x for x in request.form['logstart'].strip(
+        '[]').split(',') if x != '']).astype(float))
+    new_logscale = list(np.array([x for x in request.form['logscale'].strip(
+        '[]').split(',') if x != '']).astype(float))
 
     middle = MiddleLayer(username)
     middle.middle_edit(station, new_poly, new_jump, new_fourier, new_logstart,
@@ -195,7 +199,7 @@ def download():
         if os.path.isfile(vectorfile):
             zf.write(vectorfile, vectorfile)
         zf.close()
-        return send_file('{}{}/yourcooldata.zip'.format(output_dir,username),
+        return send_file('{}{}/yourcooldata.zip'.format(output_dir, username),
                          as_attachment=True)
 
     except FileNotFoundError as e:
@@ -203,6 +207,61 @@ def download():
         log.logger.error(e)
         flash('error retreaving the zip file')
         return redirect(url_for('homepage'))
+
+
+@app.route('/field/',  methods=['POST'])
+def field():
+    """
+    Plot request handlign
+    """
+    vector_file = "{}/vectors.txt".format(userdir)
+    model_list_file = "{}/modelo_lista.txt".format(userdir)
+    try:
+        if request.method == 'POST' and request.form['btn_field'] == 'Plot':
+            latmin = float(request.form['latmin'])
+            latmax = float(request.form['latmax'])
+            lonmin = float(request.form['lonmin'])
+            lonmax = float(request.form['lonmax'])
+            ti = request.form['t_inicial']
+            tf = request.form['t_final']
+
+            grid_density = float(request.form['grid'])
+            alfa = float(request.form['alfa'])
+
+            if grid_density > 100000 or grid_density < 100:
+                raise ValueError
+        middle = MiddleLayer(username)
+        middle.middle_field(model_list_file, vector_file, [lonmin, lonmax],
+                            [latmin, latmax], [ti, tf], grid_density, alfa)
+
+        return redirect(url_for('homepage'))
+    except (ValueError, IOError) as e:
+        log = Logger()
+        log.logger.error(e)
+        flash('Sorry, error value error, check your inputs')
+        return redirect(url_for('homepage'))
+
+
+@app.route('/mapdata')
+def mapdata():
+    output_dir = Config.config['PATH']['output_dir']
+    geojsonfile = "{}{}/out.geojson".format(output_dir, username)
+    if os.path.isfile(geojsonfile):
+        mapdata = geojsonfile
+    else:
+        mapdata = ''
+    return send_file(mapdata, as_attachment=True)
+
+
+@app.route('/colorbar')
+def colorbar():
+    output_dir = Config.config['PATH']['output_dir']
+    colorbarpng = "{}{}/colorbar.png".format(output_dir, username)
+    if os.path.isfile(colorbarpng):
+        mapdata = colorbarpng
+    else:
+        mapdata = ''
+    return send_file(mapdata, as_attachment=True)
 
 
 # run function
