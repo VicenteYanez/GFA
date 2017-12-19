@@ -53,7 +53,7 @@ class MiddleLayer():
         self.lista_gps = Config.config['PATH']['ListaGPS']
         self.series_dir = Config.config['PATH']['GPSdata']
         self.output_dir = Config.config['PATH']['output_dir']
-        self.user_dir = "{}/{}".format(self.output_dir, self.user)
+        self.user_dir = "{}{}".format(self.output_dir, self.user)
 
     def middle_select(self, lonmin, lonmax, latmin, latmax, tmin, tmax):
         if os.path.isdir(self.user_dir):
@@ -71,6 +71,22 @@ class MiddleLayer():
             from gfa.scripts import ts_select
             ts_select.main(self.user, lonmin, lonmax, latmin, latmax, ti,
                            tf)
+            # save select param
+            selectfile = '{}/select_param.json'.format(self.user_dir)
+            paramdict = {
+                'Select longitude min': lonmin,
+                'Select longitude max': lonmax,
+                'Select latitude min': latmin,
+                'Select latitude max': latmax,
+                'Select time start': ti,
+                'Select time end': tf
+            }
+
+            if os.path.isfile(selectfile):
+                os.remove(selectfile)
+
+            with open(selectfile, 'xt') as f:
+                json.dump(paramdict, f)
         except (ImportError, TypeError, ValueError) as e:
             error = 'Error importing or working with GFA. {}'.format(e)
             flash('Exception. Please, check your query. If the error repeats \
@@ -165,6 +181,21 @@ contact the admin')
                 os.remove(pngfile)
             cardozo_vorticity(self.user_dir, x, y, ve, vn,
                               lat_range, lon_range, grid, alfa)
+
+            # save select param
+            fieldfile = '{}/select_param.json'.format(self.user_dir)
+            paramdict = {
+                'Field longitude min': lon_range[0],
+                'Field longitude max': lon_range[1],
+                'Field latitude min': lat_range[0],
+                'Field latitude max': lat_range[1],
+                'Field time start': time_range[0],
+                'Field time end': time_range[1]
+            }
+
+            with open(fieldfile, 'wt') as f:
+                json.dump(paramdict, f)
+
         else:
             flash('no vector file, please calculate some vectors first!')
 

@@ -54,3 +54,20 @@ hr {
         border: 0;
         transition: opacity 100ms ease-in;
       }
+#legend {
+        position: absolute;
+        z-index:1;
+        height: 350px;
+        width: 10%;
+        left: 2%;
+        top: 3%;
+        background-image: url("/mapdata/colorbar");
+        background-size: contain;
+        background-repeat: no-repeat;
+        display: block;
+        padding: 0.5em 0.5em 0.5em 0.5em;
+      }
+
+#map {
+  z-index: 0;
+}

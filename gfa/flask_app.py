@@ -5,6 +5,7 @@ import os
 from time import gmtime, strftime
 import zipfile
 import copy
+import json
 
 from flask import Flask, render_template, flash, redirect, request, url_for, send_file
 import numpy as np
@@ -39,6 +40,7 @@ def method_not_found(e):
 def homepage():
     model_list_file = "{}/modelo_lista.txt".format(userdir)
     vector_file = "{}/vectors.txt".format(userdir)
+    paramfile = "{}/select_param.json".format(userdir)
     try:
         if request.method == 'POST' and request.form['btn_select'] == 'Select':
             latmin = float(request.form['latmin'])
@@ -69,9 +71,24 @@ def homepage():
         else:
             df_ = []
             latlon = []
+            paramdata = []
+
+        if os.path.isfile(paramfile):
+            with open(paramfile, 'r') as f:
+                paramdata = json.load(f)
+            try:
+                paramdata = [paramdata['Field longitude min'],
+                             paramdata['Field longitude max'],
+                             paramdata['Field latitude min'],
+                             paramdata['Field latitude max']]
+            except KeyError as e:
+                paramdata = []
+        else:
+            df_withvectors = []
 
         return render_template("index.html", stations=df_,
                                latlon=latlon, vectors=df_withvectors,
+                               paramdata=paramdata,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
@@ -227,8 +244,12 @@ def field():
 
             grid_density = float(request.form['grid'])
             alfa = float(request.form['alfa'])
-
+            # check input values
             if grid_density > 100000 or grid_density < 100:
+                raise ValueError
+            if latmin > latmax or lonmin > lonmax:
+                flash('Lotitude or Latitude minimun value is bigger than the\
+maximun value')
                 raise ValueError
         middle = MiddleLayer(username)
         middle.middle_field(model_list_file, vector_file, [lonmin, lonmax],
@@ -242,26 +263,38 @@ def field():
         return redirect(url_for('homepage'))
 
 
-@app.route('/mapdata')
-def mapdata():
-    output_dir = Config.config['PATH']['output_dir']
-    geojsonfile = "{}{}/out.geojson".format(output_dir, username)
-    if os.path.isfile(geojsonfile):
-        mapdata = geojsonfile
-    else:
-        mapdata = ''
-    return send_file(mapdata, as_attachment=True)
+@app.route('/mapdata/<content>')
+def mapdata(content):
+    if content == 'data':
+        output_dir = Config.config['PATH']['output_dir']
+        geojsonfile = "{}{}/out.geojson".format(output_dir, username)
+        if os.path.isfile(geojsonfile):
+            mapdata = geojsonfile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
+    elif content == 'fieldfigure':
+        output_dir = Config.config['PATH']['output_dir']
+        wzfigurefile = "{}{}/wz_field.png".format(output_dir, username)
+        if os.path.isfile(wzfigurefile):
+            mapdata = wzfigurefile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
 
-
-@app.route('/colorbar')
-def colorbar():
-    output_dir = Config.config['PATH']['output_dir']
-    colorbarpng = "{}{}/colorbar.png".format(output_dir, username)
-    if os.path.isfile(colorbarpng):
-        mapdata = colorbarpng
+    elif content == 'colorbar':
+        output_dir = Config.config['PATH']['output_dir']
+        colorbarfile = "{}{}/colorbar.png".format(output_dir, username)
+        if os.path.isfile(colorbarfile):
+            mapdata = colorbarfile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
     else:
-        mapdata = ''
-    return send_file(mapdata, as_attachment=True)
+        return ''
 
 
 # run function

@@ -2,7 +2,8 @@
 
 {% block body %}
 <div class="row">
-    <div id="colorbar-legend-container" class="seven columns">
+    <div class="seven columns">
+      <div id="legend"></div>
       <div id="map" class="map">
         <pre id="info"/>
         <script type="text/javascript">
@@ -53,6 +54,26 @@
         var vectorLayer = new ol.layer.Vector({
           source: source
         });
+        var posarray = {{ paramdata }};
+        var fieldpos1 = ol.proj.fromLonLat([posarray[0], posarray[2]]);
+        var fieldpos2 = ol.proj.fromLonLat([posarray[1], posarray[3]]);
+        var fieldLayer = new ol.layer.Image({
+          source: new ol.source.ImageStatic({
+            url: '/mapdata/fieldfigure?date={{ herenow }}',
+            projection: 'EPSG:3857',
+            imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
+          }),
+          opacity:0.5
+        })
+
+        var barLayer = new ol.layer.Image({
+          source: new ol.source.ImageStatic({
+            url: '/mapdata/colorbar?date={{ herenow }}',
+            projection: 'EPSG:3857',
+            imageExtent: [-100, 0, 100, 500]
+          }),
+          opacity:0.5
+        })
 
         var map = new ol.Map({
           target: 'map',
@@ -60,7 +81,7 @@
             new ol.layer.Tile({
               source: new ol.source.OSM()
             }),
-            vectorLayer
+            vectorLayer, fieldLayer
           ],
           controls: ol.control.defaults({
             attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
@@ -125,7 +146,7 @@
           return lineStyle;
         }
 
-        var urlgeojson = "{{url_for('mapdata')}}?date={{ herenow }}";
+        var urlgeojson = "/mapdata/data?date={{ herenow }}";
         var vorticitylayer = new ol.layer.Vector({
           source: new ol.source.Vector({
             url: urlgeojson,
@@ -134,17 +155,6 @@
           style: lineStyleFunction
         });
         map.addLayer(vorticitylayer);
-
-        // colorbar code
-        var colorbarLegend = (function() {
-          return Object.freeze({
-            update: function() {
-              var colorBarImage = document.getElementById('colorbar-legend-container');
-              var imageUrl = "{{url_for('colorbar')}}?date={{ herenow }}";
-              colorBarImage.style.backgroundImage = 'url(' + imageUrl + ')';
-            }
-          });
-        }) ();
 
         //feature info
         map.on('pointermove', showInfo);
@@ -182,11 +192,12 @@
       <div class="tabbar">
          <button class="tabbar-button" onclick="openTab('GNSS', 'tabs1')">GNSS</button>
          <button class="tabbar-button" onclick="openTab('FieldAnalysis', 'tabs1')">Field Analysis</button>
+         <button class="tabbar-button" onclick="openTab('Seismicity', 'tabs1')">Seismicity</button>
+         <button class="tabbar-button" onclick="openTab('3D Density Model', 'tabs1')">3D Density Model</button>
          <hr>
       </div>
       <div id="GNSS" class="tabs1">
       <form action="{{url_for('homepage')}}", method="post">
-        <p>Only 2d field analysis for now</p>
         <h4>Latitude</h4>
         <label for="latmin">Minimum</label>
         <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45">
@@ -210,6 +221,7 @@
       </form>
       </div>
       <div id="FieldAnalysis" class="tabs1" style="display:none">
+        <p>Only 2d field analysis for now</p>
         <form action="{{url_for('field')}}", method="post">
           <h4>Latitude</h4>
           <label for="latmin">Minimum</label>
@@ -238,6 +250,10 @@
           <input class="button-primary" name="btn_field" value="Plot" type="submit">
         </form>
       </div>
+      <div id="Seismicity" class="tabs1" style="display:none">
+      </div>
+      <div id="3D Density Model" class="tabs1" style="display:none">
+      </div>
   </div>
 </div>
 <br>
@@ -249,7 +265,7 @@
     </div>
   </div>
   <div class="two columns">
-    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" type="submit" value="Download Data">
+    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" type="submit" value="Download Data"/>
   </div>
   <hr>
 </div>

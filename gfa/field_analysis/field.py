@@ -87,9 +87,116 @@ def triangular_gradient(ux, uy, x, y, ele):
     return gradiente
 
 
-def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
+def distance_weigthed2d(b, xi, yi, gridx, gridy, method='gfa', alfa=200000,
                         dmin=200000):
     """
+    Function that calculates a velocity gradient surface using the
+    Grid Distance Weighted from Cardozo&Allmendinger(2009). For the
+     least-squares solution it uses the numpy.linalg.lstsq function
+
+    Input
+    b     : velocities vector array like [[v_1x], [v_1y], [v_2x], [v_2y]....]
+    xi    : longitude station position 1d array-like
+    yi    : latitude station position 1d array-like
+    gridx : list with the x-position of each grid point
+    gridy : list with the y-position of each grid point
+    alfa  : constant
+    dmin  : min distance to any station
+    method: method used for the calculation of the velocity gradient.
+            Coult be 'n' for numpy.lstsq or 'gfa' for our own
+            routine for least square solution(field.manual_lsq)
+
+    Returns
+     - Array with the gradients for each points (4, N)
+    where N (columns) is the number of points in the grid
+    and the rows are (uxdx, uxdy, uydx, uydy)
+
+    - Array with the residuals of the least-squares solution
+    """
+    # prep position matrix M
+    M = []
+    xp, yp = geo2proj(xi, yi, 0, 0)  # proj from geographic to meters
+    for i, x in enumerate(xi):
+        row1 = [1, 0, xp[i], yp[i], 0, 0]
+        row2 = [0, 1, 0, 0, xp[i], yp[i]]
+        M.append(row1)
+        M.append(row2)
+    M = np.matrix(M)
+
+    # make distance weighted operator
+    a_total = []
+    total_error = []
+    for i, x in enumerate(gridx):
+        if i % 100 == 0:
+            print('processing point {}\
+\t {:.0f} percent complete'.format(i, (100*i/len(gridx))))
+        # calculate distance to other stations
+        d = [vinc_dist(gridx[i], gridy[i],
+                       xi[i2], yi[i2]) for i2, x2 in enumerate(xi)]
+        d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
+
+        d = np.reshape([d, d], 2*len(d), order='F')  # order array d
+        W = np.exp([(-di**2/(2*alfa**2)) for di in d])
+        # convert W to a diagonal matrMx
+        W = np.diag(W)
+
+        # solution demend of the method selected
+        if method == 'n':
+            # remove the points with no closest station
+            if d.min() > dmin:
+                a_total.append([[np.nan], [np.nan], [np.nan], [np.nan],
+                                [np.nan], [np.nan]])
+                continue
+            # error handling in case of station without solution
+            try:
+                # inverse square
+                MTW = np.dot(M.T, W)
+                M2 = np.dot(MTW, M)
+                b2 = np.dot(MTW, b)
+                a, residual, rank, s = lstsq(M2, b2)
+                a_total.append(a)
+                total_error.append(residual)
+            except(np.linalg.linalg.LinAlgError):
+                print('error in point {}, computation does not converge\
+'.format(i))
+                a_total.append([[np.nan], [np.nan], [np.nan], [np.nan],
+                                [np.nan], [np.nan]])
+
+
+        elif method == 'gfa':
+            # remove the points with no closest station
+            if d.min() > dmin:
+                a_total.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                                         np.nan, np.nan]))
+                total_error.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                                             np.nan, np.nan]))
+                continue
+            try:
+                # inverse square
+                a, error = manual_lsq(W, M, b)
+                a_total.append(a)
+                total_error.append(error)
+            except Exception as e:
+                print('error in point {}, computation does not converge\
+'.format(i))
+                a_total.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                                         np.nan, np.nan]))
+                total_error.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                                             np.nan, np.nan]))
+    if method == 'n':
+        gradiente = np.array(a_total).T[0][2:]
+        total_error = np.array(total_error).T
+    elif method == 'gfa':
+        gradiente = np.array(a_total).T[2:]
+        total_error = np.array(total_error).T[2:]
+
+    return gradiente, total_error
+
+
+def distance_weigthed2d_test(b, xi, yi, gridx, gridy, alfa=200000,
+                             dmin=200000):
+    """
+    This test use it our own minimal square solution
     Function that calculates a velocity gradient surface using the
     Grid Distance Weighted from Cardozo&Allmendinger(2009). For the
      least-squares solution it uses the numpy.linalg.lstsq function
@@ -122,7 +229,7 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
 
     # make distance weighted operator
     a_total = []
-    residual_total = []
+    total_error = []
     for i, x in enumerate(gridx):
         if i % 100 == 0:
             print('processing point {}\
@@ -133,8 +240,10 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
         d = np.array(d).T[0]  # because vinc_dist return distance and azimuths
         # remove the points with no closest station
         if d.min() > dmin:
-            a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
-                            [np.nan]])
+            a_total.append(np.array([np.nan, np.nan, np.nan, np.nan, np.nan,
+                           np.nan]))
+            total_error.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                                np.nan, np.nan]))
             continue
         d = np.reshape([d, d], 2*len(d), order='F')  # order array d
         W = np.exp([(-di**2/(2*alfa**2)) for di in d])
@@ -144,21 +253,20 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, alfa=200000,
         # error handling in case of station without solution
         try:
             # inverse square
-            MTW = np.dot(M.T, W)
-            M2 = np.dot(MTW, M)
-            b2 = np.dot(MTW, b)
-            a, residual, rank, s = lstsq(M2, b2)
+            a, error = manual_lsq(W, M, b)
             a_total.append(a)
-            residual_total.append(residual)
+            total_error.append(error)
         except(np.linalg.linalg.LinAlgError):
             print('error in point {}, computation does not converge'.format(i))
-            a_total.append([[np.nan], [np.nan], [np.nan], [np.nan], [np.nan],
-                            [np.nan]])
-    a_total = np.array(a_total).T
-    residual_total = np.array(residual_total).T
-    gradiente = a_total[0][2:]
+            a_total.append(np.array([np.nan, np.nan, np.nan, np.nan, np.nan,
+                           np.nan]))
+            total_error.append(np.array([np.nan, np.nan, np.nan, np.nan,
+                               np.nan, np.nan]))
 
-    return gradiente, residual_total
+    gradiente = np.array(a_total).T[2:]
+    total_error = np.array(total_error).T[2:]
+
+    return gradiente, total_error
 
 
 def distance_weigthed3d(b, xi, yi, zi=0, alfa=200000):
@@ -370,3 +478,34 @@ def clean_array(array_pp, value_min, value_max, param_=()):
         return copy_app, param_
     else:
         return copy_app
+
+
+def manual_lsq(W, A, b):
+    """
+    Esta funcion resuelve el problema de minimos cuadrados mas el error
+    asociado a cada variables dada la siguiente informacion
+
+    n estaciones
+    h variables
+    W matriz cuadrada de pesos nxn
+    A Matriz modelo nxh
+    b observables nx1
+
+    si no se dispone de una matriz de pesos W, se debe ingresar por defecto
+    la matriz identidad W = I
+    I = np.eye(n)
+    """
+    p = np.shape(A)
+    n = p[0]   # N Mediciones
+    h = p[1]   # N Variables
+    ATW = np.dot(A.T, W)
+    Qxx = np.linalg.inv(np.dot(ATW, A))
+    N = np.dot(ATW, b)
+    u = np.dot(Qxx, N)  # Vector solucion
+    v = np.dot(A, u)-b  # Vector de residuos
+    s2 = np.dot(np.dot(v.T, W), v)/(n-h)  # Normalizacion
+    Sxx = s2[0, 0]*Qxx  # Matriz de covarianza
+    var = np.diag(Sxx)
+    std = np.sqrt(var)  # desviacion estandar (Error estandar)
+
+    return np.array(u.T)[0], np.array(std)
