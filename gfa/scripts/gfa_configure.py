@@ -16,5 +16,7 @@ def main():
                       'eqfile': './eq_file.txt',
                       'output_dir': './../output'}
     config['GNSS parameters'] = {'errmax': '10'}
+    config['WEB'] = {'websession': 'False',
+                     'offline_username': 'gfa'}
     with open('parameters.ini', 'w') as configfile:
         config.write(configfile)

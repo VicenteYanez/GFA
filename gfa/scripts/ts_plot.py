@@ -12,7 +12,7 @@ is plot.
 [4] If the forth parameter is -v, the velocity vector is plot
 """
 
-from gfa.gnss_analysis.loadGPS import load1stations
+from gfa.data_tools.loadGPS import load1stations
 from gfa.gnss_analysis.model_accions import load_vector
 import gfa.gnss_analysis.fun_tsplot as pltfun
 from gfa.log_config import Logger

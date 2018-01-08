@@ -7,7 +7,7 @@ from scipy.interpolate import griddata
 import cartopy.crs as ccrs
 import numpy as np
 
-from gfa.field_analysis import contour2geojson
+from gfa.website_tools import contour2geojson
 from gfa.field_analysis import field
 
 
@@ -76,7 +76,7 @@ def wk_figure(x, y, z):
     """
     Figure of example_vorticity.py
     """
-    fig = plt.figure(figsize=(9, 19))
+    fig = plt.figure()
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     # extension of the map
@@ -196,7 +196,8 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
     # cardozo&allmendinger strain
     b = np.reshape([ve_gps, vn_gps], (2*len(ve_gps), 1), order='F')
     gradiente, r = field.distance_weigthed2d(b, lon_gps, lat_gps, gridx, gridy,
-                                             alfa=alfa, dmin=100000)
+                                             alfa=alfa, dmin=100000,
+                                             method='numpy')
 
     # tensor calculations
     S, W = field.velocitytensor_2d(gradiente[0], gradiente[1],
@@ -228,10 +229,12 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
     fig1.savefig(fname, dpi=500, edgecolor='k', bbox_inches='tight',
                  transparent=True, pad_inches=0.)
     # cinematic vorticity figure
+    """
     fig2 = wk_figure(gridx, gridy, Wk)
-    fname2 = "{}/wk_field.png".format(dir_path, alfa)
+    fname2 = "{}/wk_field.png".format(dir_path)
     fig2.savefig(fname2, dpi=300, edgecolor='k', orientation='portrait',
                  bbox_inches=None, pad_inches=0.2)
+    """
 
     print('end function')
     return

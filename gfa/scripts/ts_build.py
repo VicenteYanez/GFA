@@ -10,7 +10,7 @@ de una estación
 import sys
 import os
 
-from gfa.gnss_analysis.loadGPS import load1stations
+from gfa.data_tools.loadGPS import load1stations
 from gfa.load_param import Config
 import gfa.gnss_analysis.model_accions as model_accions
 

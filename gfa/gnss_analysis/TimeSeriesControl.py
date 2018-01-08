@@ -12,7 +12,7 @@ import pdb
 
 import numpy as np
 
-from gfa.gnss_analysis.loadGPS import format_csn, format_model
+from gfa.data_tools.loadGPS import format_csn
 import gfa.gnss_analysis.fun_vector
 
 

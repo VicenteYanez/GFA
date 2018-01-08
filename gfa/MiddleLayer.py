@@ -12,8 +12,8 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
-from gfa.field_analysis.cardozo_vorticity import cardozo_vorticity
-from gfa.gnss_analysis.VectorData import VectorData
+from gfa.website_tools.cardozo_vorticity import cardozo_vorticity
+from gfa.data_tools.VectorData import VectorData
 
 
 """

@@ -141,7 +141,7 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, method='gfa', alfa=200000,
         W = np.diag(W)
 
         # solution demend of the method selected
-        if method == 'n':
+        if method == 'numpy':
             # remove the points with no closest station
             if d.min() > dmin:
                 a_total.append([[np.nan], [np.nan], [np.nan], [np.nan],
@@ -161,7 +161,6 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, method='gfa', alfa=200000,
 '.format(i))
                 a_total.append([[np.nan], [np.nan], [np.nan], [np.nan],
                                 [np.nan], [np.nan]])
-
 
         elif method == 'gfa':
             # remove the points with no closest station
@@ -183,7 +182,7 @@ def distance_weigthed2d(b, xi, yi, gridx, gridy, method='gfa', alfa=200000,
                                          np.nan, np.nan]))
                 total_error.append(np.array([np.nan, np.nan, np.nan, np.nan,
                                              np.nan, np.nan]))
-    if method == 'n':
+    if method == 'numpy':
         gradiente = np.array(a_total).T[0][2:]
         total_error = np.array(total_error).T
     elif method == 'gfa':

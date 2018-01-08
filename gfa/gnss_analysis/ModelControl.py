@@ -9,7 +9,7 @@ import json
 
 import numpy as np
 
-from gfa.gnss_analysis.loadGPS import format_model
+from gfa.data_tools.loadGPS import format_model
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 from gfa.gnss_analysis.TimeSeriesControl import TimeSeriesControl
 

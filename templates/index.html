@@ -192,8 +192,6 @@
       <div class="tabbar">
          <button class="tabbar-button" onclick="openTab('GNSS', 'tabs1')">GNSS</button>
          <button class="tabbar-button" onclick="openTab('FieldAnalysis', 'tabs1')">Field Analysis</button>
-         <button class="tabbar-button" onclick="openTab('Seismicity', 'tabs1')">Seismicity</button>
-         <button class="tabbar-button" onclick="openTab('3D Density Model', 'tabs1')">3D Density Model</button>
          <hr>
       </div>
       <div id="GNSS" class="tabs1">
@@ -238,7 +236,7 @@
           <input type="text" placeholder="t_inicial" name="t_inicial" value="2005-01-01">
           <label for="final">End</label>
           <input type="text" placeholder="t_final" name="t_final" value="2016-12-31">
-          <h4>Metodology</h4>
+          <h4>Methodology</h4>
           <input type="radio" name="metodology" value="interpol"> Vector interpolation(not implemented yet)
           <br />
           <input type="radio" name="metodology" value="cardozo"> Cardozo & Allmendinger matrix(default)
@@ -249,10 +247,6 @@
           <br />
           <input class="button-primary" name="btn_field" value="Plot" type="submit">
         </form>
-      </div>
-      <div id="Seismicity" class="tabs1" style="display:none">
-      </div>
-      <div id="3D Density Model" class="tabs1" style="display:none">
       </div>
   </div>
 </div>

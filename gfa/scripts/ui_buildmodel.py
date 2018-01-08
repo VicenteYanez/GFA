@@ -13,7 +13,7 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gfa.gnss_analysis.loadGPS import load1stations as load1stations
+from gfa.data_tools.loadGPS import load1stations as load1stations
 from gfa.gnss_analysis.model_accions import *
 import gfa.gnss_analysis.fun_tsplot as pltfun
 from gfa.load_param import Config
