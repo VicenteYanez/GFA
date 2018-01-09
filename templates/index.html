@@ -27,6 +27,7 @@
         }
 
         // station points
+        // /////////////////////////
         var fill = new ol.style.Fill({color: 'black'});
         var styles = {
          'square': new ol.style.Style({
@@ -51,6 +52,39 @@
           features: features
         });
 
+        // velocity vectors
+        var styleFunction = function(feature) {
+        var geometry = feature.getGeometry();
+        var styles = [
+          // linestring
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: '#ffcc33',
+              width: 2
+            })
+          })
+        ];
+        geometry.forEachSegment(function(start, end) {
+          var dx = end[0] - start[0];
+          var dy = end[1] - start[1];
+          var rotation = Math.atan2(dy, dx);
+          // arrows
+          styles.push(new ol.style.Style({
+            geometry: new ol.geom.Point(end),
+            image: new ol.style.Icon({
+              src: 'https://openlayers.org/en/v4.6.4/examples/data/arrow.png',
+              anchor: [0.75, 0.5],
+              rotateWithView: true,
+              rotation: -rotation
+            })
+          }));
+        });
+        return styles;
+      };
+
+
+        // field image
+        // /////////////////////////
         var vectorLayer = new ol.layer.Vector({
           source: source
         });
@@ -328,7 +362,7 @@
         <tr>
           <form action="{{url_for('calc_vector')}}", method="post">
           <td>{{ station[0] }}<br>Lon: {{ station[1] }}º<br>Lat: {{ station[2] }}º<input type="hidden" name="stationname" value="{{ station[0]}}"></td>
-          <td>Ve: {{ station[8] }} <br>Vn: {{ station[9] }} <br> Vz:{{ station[10] }} </td>
+          <td>Ve: {{ station[8] }} <br>Vn: {{ station[9] }} <br> Vz: {{ station[10] }} </td>
           <td><input style="width:100%" type="text" name="t1" value="{{ station[11] }}"></td>
           <td><input style="width:100%" type="text" name="t2" value="{{ station[12] }}"></td>
           <td><input style="width:100%" class="button-primary" name="btn_vector" value="Calculate" type="submit">

@@ -54,26 +54,14 @@ def select(alias, lonmin, lonmax, latmin, latmax, tmin, tmax):
 @click.option('--poly', default=1, help='Grade of the polynomial function')
 @click.option('--fourier', default='',
               help='periods of the Fourier function')
-@click.option('--jumps', default='', help='Step location')
+@click.option('--jumps', default='', help='Step location(yyyy-mm-dd)')
 @click.option('--logscale', default='1', help='Scale of the log function')
-@click.option('--logstart', default='', help='Start of the log function')
+@click.option('--logstart', default='', help='Start of the log function\
+(yyyy-mm-dd)')
 def build(alias, station, poly, jumps, fourier, logscale, logstart):
     """
     Calculates the model for one station
     """
-    if fourier == '':
-        fourier = []
-    else:
-        fourier = [float(s) for s in fourier.split(',')]
-    if jumps == '':
-        jumps = []
-    else:
-        jumps = [float(s) for s in jumps.split(',')]
-    logscale = [float(s) for s in logscale.split(',')]
-    if logstart == '':
-        logstart = []
-    else:
-        logstart = [float(s) for s in logstart.split(',')]
     ts_build.main(alias, station, poly, jumps, fourier, logscale, logstart)
     return
 

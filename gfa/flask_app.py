@@ -121,6 +121,7 @@ def homepage():
     vector_file = "{}/vectors.txt".format(userdir)
     paramfile = "{}/select_param.json".format(userdir)
     try:
+        # manage the request of data from the user
         if request.method == 'POST' and request.form['btn_select'] == 'Select':
             latmin = float(request.form['latmin'])
             latmax = float(request.form['latmax'])
@@ -133,10 +134,10 @@ def homepage():
             middle.middle_select(lonmin, lonmax, latmin, latmax, ti, tf)
             flash('finished the data loading')
 
+        # if there's data load the model from the station requested by the user
         if os.path.isfile(model_list_file):
-            # if there is data, load it
             latlon, df = load_model(model_list_file)
-            df_ = np.array(df)
+            stations_param = np.array(df)
             # empty for the rest of the fields
             df_withvectors = copy.deepcopy(df)
             df_withvectors.assign(vector_e=np.nan, vector_n=np.nan,
@@ -148,10 +149,11 @@ def homepage():
                 middle = MiddleLayer(session['username'])
                 df_withvectors = middle.middle_vectortable(df, vector_file)
         else:
-            df_ = []
+            stations_param = []
             latlon = []
-            paramdata = []
-
+            df_withvectors = []
+        # load the coordinates of the area in wich is going to be displayed
+        # the velocity field on the map
         if os.path.isfile(paramfile):
             with open(paramfile, 'r') as f:
                 paramdata = json.load(f)
@@ -163,9 +165,9 @@ def homepage():
             except KeyError as e:
                 paramdata = []
         else:
-            df_withvectors = []
+            paramdata = []
 
-        return render_template("index.html", stations=df_,
+        return render_template("index.html", stations=stations_param,
                                latlon=latlon, vectors=df_withvectors,
                                paramdata=paramdata,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
@@ -190,22 +192,25 @@ def edit(station):
     """
     Code for handle edit request
     """
-    # transform input to a list with floats
-    new_poly = int(request.form['poly'])
-    new_jump = list(np.array([x for x in request.form['jump'].strip(
-        '[]').split(',') if x != '']).astype(float))
-    new_fourier = list(np.array([x for x in request.form['fourier'].strip(
-        '[]').split(',') if x != '']).astype(float))
-    new_logstart = list(np.array([x for x in request.form['logstart'].strip(
-        '[]').split(',') if x != '']).astype(float))
-    new_logscale = list(np.array([x for x in request.form['logscale'].strip(
-        '[]').split(',') if x != '']).astype(float))
+    try:
+        # transform input to a list with floats
+        new_poly = int(request.form['poly'])
+        new_jump = request.form['jump']
+        new_fourier = request.form['fourier']
+        new_logstart = request.form['logstart']
+        new_logscale = request.form['logscale']
 
-    middle = MiddleLayer(session['username'])
-    middle.middle_edit(station, new_poly, new_jump, new_fourier, new_logstart,
-                       new_logscale)
+        middle = MiddleLayer(session['username'])
+        middle.middle_edit(station, new_poly, new_jump, new_fourier,
+                           new_logstart, new_logscale)
 
-    flash("{} upgrated".format(station))
+        flash("{} upgrated".format(station))
+    except ValueError as e:
+        error = 'Exception. Please, check your inputs (edit {}).\
+If the error repeats contact the admin'.format(station)
+        log = Logger()
+        log.logger.error(e)
+        flash(error)
 
     return redirect(url_for('homepage'))
 

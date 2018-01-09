@@ -88,13 +88,23 @@ class VectorData():
             lambda x: '{0:.3f}'.format(float(x)))
         df_final['latitude'] = df_final['latitude'].apply(
             lambda x: '{0:.3f}'.format(float(x)))
+
+        df_final['vector_e'] = df_final['vector_e'].apply(
+            lambda x: str(x).replace(
+                "(", "").replace(")", "").replace("'", "").replace(" ", ""))
+        df_final['vector_n'] = df_final['vector_n'].apply(
+            lambda x: str(x).replace(
+                "(", "").replace(")", "").replace("'", "").replace(" ", ""))
+        df_final['vector_z'] = df_final['vector_z'].apply(
+            lambda x: str(x).replace(
+                "(", "").replace(")", "").replace("'", "").replace(" ", ""))
+
         df_final['start_time_str'] = df_final['start_time_str'].apply(
             lambda x: str(x).replace(
                 "(", "").replace(")", "").replace("'", "").replace(" ", ""))
         df_final['end_time_str'] = df_final['end_time_str'].apply(
             lambda x: str(x).replace(
                 "(", "").replace(")", "").replace("'", "").replace(" ", ""))
-
         # format list result
         df_final = np.array(df_final)
 

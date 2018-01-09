@@ -235,7 +235,19 @@ def load_model(model_list_file):
                                           'latitude', 'polynomial',
                                           'jumps', 'fourier',
                                           'log start', 'log scale'])
+    # format output
+    df['jumps'] = df['jumps'].apply(
+        lambda x: str(x).replace(
+            "[", "").replace("]", "").replace(" ", "").replace("'", ""))
+    df['fourier'] = df['fourier'].apply(
+        lambda x: str(x).replace("[", "").replace("]", "").replace(" ", ""))
+    df['log start'] = df['log start'].apply(
+        lambda x: str(x).replace(
+            "[", "").replace("]", "").replace(" ", "").replace("'", ""))
+    df['log scale'] = df['log scale'].apply(
+        lambda x: str(x).replace("[", "").replace("]", "").replace(" ", ""))
     df['longitude'] = df['longitude'].apply(
         lambda x: '{0:.3f}'.format(float(x)))
     df['latitude'] = df['latitude'].apply(lambda x: '{0:.3f}'.format(float(x)))
+
     return latlon, df
