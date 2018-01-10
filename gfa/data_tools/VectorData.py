@@ -105,6 +105,7 @@ class VectorData():
         df_final['end_time_str'] = df_final['end_time_str'].apply(
             lambda x: str(x).replace(
                 "(", "").replace(")", "").replace("'", "").replace(" ", ""))
+        print(df_final)
         # format list result
         df_final = np.array(df_final)
 

@@ -8,6 +8,7 @@ Functions for plot time series GNSS
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 def plot(estac, tiempo, desp):
@@ -25,7 +26,7 @@ def plot(estac, tiempo, desp):
     plt.subplots_adjust(hspace=0.3)
 
     # formato ejes
-    plt.xlabel('years', fontsize=8)
+    plt.xlabel('date', fontsize=8)
     plt.ylabel('mm', fontsize=8, position=(0.5, 1.8))
 
     # change font size x and y axis
@@ -55,9 +56,15 @@ def plot(estac, tiempo, desp):
     ax3.set_title("{} Vertical".format(estac), fontsize=9)
 
     # plot data
+    ax1.plot([], [])
     ax1.plot(tiempo, desp[0], 'o', color='#99A3F2', markeredgewidth=0.0)
     ax2.plot(tiempo, desp[1], 'o', color='#99A3F2', markeredgewidth=0.0)
     ax3.plot(tiempo, desp[2], 'o', color='#99A3F2', markeredgewidth=0.0)
+
+    f.autofmt_xdate()
+    xfmt = mdates.DateFormatter('%d-%m-%Y')
+    ax1.xaxis.set_major_formatter(xfmt)
+    plt.xlim(tiempo[0], tiempo[-1])
 
     return f, (ax1, ax2, ax3)
 
@@ -74,6 +81,7 @@ def add_velocity(figure, axes, tiempo, rectas):
     """
     Add velocity trend
     """
+    tiempo = fractlist2dateobj(tiempo)
     tpart = (tiempo[-1] - tiempo[0])/5
     # muestreo
     for recta in rectas:

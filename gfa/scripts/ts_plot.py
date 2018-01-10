@@ -12,11 +12,14 @@ is plot.
 [4] If the forth parameter is -v, the velocity vector is plot
 """
 
+import matplotlib.pyplot as plt
+
 from gfa.data_tools.loadGPS import load1stations
 from gfa.gnss_analysis.model_accions import load_vector
 import gfa.gnss_analysis.fun_tsplot as pltfun
 from gfa.log_config import Logger
 from gfa.load_param import Config
+from gfa.data_tools.auxfun import fractlist2dateobj
 
 
 def main(codigo, station, addmodel, addvector):
@@ -26,21 +29,22 @@ def main(codigo, station, addmodel, addvector):
 
     # load data and plot function
     tsdata, modeldata = load1stations(station, directory, True, True)
+    timeplot = fractlist2dateobj(tsdata[1][0])
     x0 = tsdata[1][1][0]
     y0 = tsdata[1][2][0]
     z0 = tsdata[1][3][0]
     tsdata[1][1] = tsdata[1][1] - x0
     tsdata[1][2] = tsdata[1][2] - y0
     tsdata[1][3] = tsdata[1][3] - z0
-    f, axes = pltfun.plot(station, tsdata[1][0], tsdata[1][1:4])
+    f, axes = pltfun.plot(station, timeplot, tsdata[1][1:4])
 
     # optional plots: add model
     if addmodel == '-m':
         modeldata[1][1] = modeldata[1][1] - x0
         modeldata[1][2] = modeldata[1][2] - y0
         modeldata[1][3] = modeldata[1][3] - z0
-        f, axes = pltfun.add_modelo(f, axes, modeldata[1][0],
-                                    modeldata[1][1:4])
+        modeltime = fractlist2dateobj(modeldata[1][0])
+        f, axes = pltfun.add_modelo(f, axes, modeltime, modeldata[1][1:4])
         print('Model added')
     else:
         print('Model not added')
@@ -71,3 +75,4 @@ def main(codigo, station, addmodel, addvector):
 
     # save plot
     pltfun.save_figure(f, savefile)
+    plt.close()

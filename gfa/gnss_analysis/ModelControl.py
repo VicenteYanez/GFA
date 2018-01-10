@@ -12,6 +12,7 @@ import numpy as np
 from gfa.data_tools.loadGPS import format_model
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 from gfa.gnss_analysis.TimeSeriesControl import TimeSeriesControl
+from gfa.data_tools.auxfun import fractlist2stryear
 
 
 class ModelControl(TimeSeriesControl):
@@ -50,7 +51,7 @@ class ModelControl(TimeSeriesControl):
         Input:
             lista   : first list returned by loadGPS function
             data    : second list returned by loadGPS function
-            npoly      : Degree of polynomial used by the Trajectory Model
+            npoly   : Degree of polynomial used by the Trajectory Model
             fperdios: periods of Furier function used by the Trajectory Model
             eq_file : file with the configuration of jumps/earthquakes
         """
@@ -97,9 +98,9 @@ class ModelControl(TimeSeriesControl):
 
             # guardar txt con parametros
             parametros = {'polinomio': model.n,
-                          'saltos': model.tjump.tolist(),
+                          'saltos': fractlist2stryear(model.tjump.tolist()),
                           'Periodos Fourier': model.fperiods.tolist(),
-                          'Inicio log': model.tlt.tolist(),
+                          'Inicio log': fractlist2stryear(model.tlt.tolist()),
                           'Escala curva log': model.tsc.tolist()}
             residual = {'Residual E': res_e.tolist(),
                         'Residual N': res_n.tolist(),
@@ -169,7 +170,7 @@ class ModelControl(TimeSeriesControl):
             lat_estacion = lat_estacion[0]
 
         # terremotos
-        fecha_evento = np.loadtxt(earthq_file, usecols=[2], skiprows=1)
+        eventdate = np.loadtxt(earthq_file, usecols=[2], skiprows=1)
         # intervalo de area de efecto de los eventos
         int_lat = np.loadtxt(earthq_file, usecols=[0, 1], skiprows=1)
 
@@ -178,19 +179,19 @@ class ModelControl(TimeSeriesControl):
         tsc = []
 
         # incorpora datos de sismos y saltos del archivo eventos.txt
-        for n, evento in enumerate(fecha_evento):
+        for n, evento in enumerate(eventdate):
             # si estacion esta en area de efecto del archivo eventos.txt
             if lat_estacion < int_lat[n][0] and lat_estacion > int_lat[n][1]:
-                print("Incorpora sismo {} {} {}".format(name_est,
-                                                        lat_estacion,
-                                                        fecha_evento[n]))
-                tjump.append(fecha_evento[n])
-                tlt.append(fecha_evento[n])
+                print("Event added {} {} {}".format(name_est, lat_estacion,
+                                                    eventdate[n]))
+                tjump.append(eventdate[n])
+                tlt.append(eventdate[n])
                 tsc.append(2)
             else:
-                print("Ignora {} {} {} {}".format(name_est, lat_estacion,
-                                                  int_lat[n][0],
-                                                  int_lat[n][1]))
+                print("Event ignored {} {} {} {}".format(name_est,
+                                                         lat_estacion,
+                                                         int_lat[n][0],
+                                                         int_lat[n][1]))
         tjump = np.array(tjump)
         tlt = np.array(tlt)
         tsc = np.array(tsc)
