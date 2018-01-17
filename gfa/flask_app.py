@@ -7,6 +7,8 @@ import zipfile
 import copy
 import json
 import gc
+import sys
+import linecache
 
 from flask import Flask, render_template, flash, redirect, request, url_for
 from flask import session, send_file
@@ -15,6 +17,19 @@ import numpy as np
 from gfa.log_config import Logger
 from gfa.MiddleLayer import MiddleLayer, load_model
 from gfa.load_param import Config
+
+
+def PrintException():
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
+
+    msg = 'EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno,
+                                                       line.strip(), exc_obj)
+    return msg
 
 
 filedir = os.path.dirname(os.path.realpath(__file__))
@@ -120,6 +135,10 @@ def homepage():
     model_list_file = "{}/modelo_lista.txt".format(userdir)
     vector_file = "{}/vectors.txt".format(userdir)
     paramfile = "{}/select_param.json".format(userdir)
+    vectormapfile = "{}/vectorsmap.json".format(userdir)
+
+    generalsolutionlist = '{}general_solution/resume.txt'.format(
+        Config.config['PATH']['output_dir'])
     try:
         # manage the request of data from the user
         if request.method == 'POST' and request.form['btn_select'] == 'Select':
@@ -136,7 +155,7 @@ def homepage():
 
         # if there's data load the model from the station requested by the user
         if os.path.isfile(model_list_file):
-            latlon, df = load_model(model_list_file)
+            lonlat, df = load_model(model_list_file)
             stations_param = np.array(df)
             # empty for the rest of the fields
             df_withvectors = copy.deepcopy(df)
@@ -150,35 +169,60 @@ def homepage():
                 df_withvectors = middle.middle_vectortable(df, vector_file)
         else:
             stations_param = []
-            latlon = []
             df_withvectors = []
+            if os.path.isfile(generalsolutionlist):
+                lonlat = np.loadtxt(generalsolutionlist, usecols=[1, 2],
+                                    skiprows=1).tolist()
+            else:
+                lonlat = []
         # load the coordinates of the area in wich is going to be displayed
-        # the velocity field on the map
+        # the vorticity field and the velocity vectors on the map
         if os.path.isfile(paramfile):
             with open(paramfile, 'r') as f:
                 paramdata = json.load(f)
             try:
-                paramdata = [paramdata['Field longitude min'],
+                fieldarea = [paramdata['Field longitude min'],
                              paramdata['Field longitude max'],
                              paramdata['Field latitude min'],
                              paramdata['Field latitude max']]
             except KeyError as e:
-                paramdata = []
+                fieldarea = []
+            try:
+                velocityarea = [paramdata['Vector longitude min'],
+                                paramdata['Vector longitude max'],
+                                paramdata['Vector latitude min'],
+                                paramdata['Vector latitude max']]
+            except KeyError as e:
+                velocityarea = []
         else:
-            paramdata = []
+            fieldarea = []
+            velocityarea = []
+
+        if os.path.isfile(vectormapfile):
+            with open(vectormapfile, 'r') as f:
+                vectors2plot = json.load(f)
+                vectors2plot = np.array([vectors2plot['x'], vectors2plot['y'],
+                                     vectors2plot['vx'], vectors2plot['vy']]).T
+                vectors2plot = vectors2plot.tolist()
+            print(vectors2plot)
+        else:
+            vectors2plot = []
 
         return render_template("index.html", stations=stations_param,
-                               latlon=latlon, vectors=df_withvectors,
-                               paramdata=paramdata,
+                               lonlat=lonlat, vectors=df_withvectors,
+                               fieldarea=fieldarea, velocityarea=velocityarea,
+                               vectors2plot=vectors2plot,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
-        error = 'Exception. Please, check your query. If the error repeats \
-contact the admin'
+        error = 'Fatal Exception. Please, check your query. If the error \
+repeats contact the admin'
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash(error)
-    return render_template("index.html", stations=[])
+    return render_template("index.html", stations=[], lonlat=[], vectors=[],
+                           fieldarea=[], velocityarea=[], vectors2plot=[],
+                           herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
 
 @app.route('/about/')
@@ -260,6 +304,8 @@ def calc_vector():
     userdir = "{}{}".format(Config.config['PATH']['output_dir'],
                             session['username'])
     vector_file = "{}/vectors.txt".format(userdir)
+    model_list_file = "{}/modelo_lista.txt".format(userdir)
+    paramjsonfile = "{}/select_param.json".format(userdir)
     try:
         if request.method == 'POST' and request.form['btn_vector'] == 'Calculate':
             tv1 = request.form['t1']
@@ -267,7 +313,8 @@ def calc_vector():
             station = request.form['stationname']
 
             middle = MiddleLayer(session['username'])
-            middle.middle_vector(station, tv1, tv2, vector_file)
+            middle.middle_vector(station, tv1, tv2, vector_file,
+                                 model_list_file, paramjsonfile)
             flash('{} vector sucessfull'.format(station))
     except ValueError as e:
         log = Logger()
@@ -363,8 +410,8 @@ maximun value')
 @app.route('/mapdata/<content>')
 @login_required
 def mapdata(content):
+    output_dir = Config.config['PATH']['output_dir']
     if content == 'data':
-        output_dir = Config.config['PATH']['output_dir']
         geojsonfile = "{}{}/out.geojson".format(output_dir,
                                                 session['username'])
         if os.path.isfile(geojsonfile):
@@ -374,7 +421,6 @@ def mapdata(content):
             mapdata = ''
             return mapdata
     elif content == 'fieldfigure':
-        output_dir = Config.config['PATH']['output_dir']
         wzfigurefile = "{}{}/wz_field.png".format(output_dir,
                                                   session['username'])
         if os.path.isfile(wzfigurefile):
@@ -385,7 +431,6 @@ def mapdata(content):
             return mapdata
 
     elif content == 'colorbar':
-        output_dir = Config.config['PATH']['output_dir']
         colorbarfile = "{}{}/colorbar.png".format(output_dir,
                                                   session['username'])
         if os.path.isfile(colorbarfile):
@@ -394,6 +439,7 @@ def mapdata(content):
         else:
             mapdata = ''
             return mapdata
+
     else:
         return ''
 

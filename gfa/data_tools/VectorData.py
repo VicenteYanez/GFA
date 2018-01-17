@@ -7,6 +7,7 @@ Used a pandas dataframe
 from datetime import datetime, timedelta
 from time import strftime
 import copy
+import json
 
 import numpy as np
 import pandas as pd
@@ -43,7 +44,7 @@ def is_leap(year):
 class VectorData():
     def __init__(self, vector_file):
         """
-        Loads the vector file and join it with the rest of the statio data
+        Loads the vector file and join it with the rest of the station data
         """
         self.vecdf = pd.read_csv(vector_file)
         self.vector_file = vector_file
@@ -105,7 +106,6 @@ class VectorData():
         df_final['end_time_str'] = df_final['end_time_str'].apply(
             lambda x: str(x).replace(
                 "(", "").replace(")", "").replace("'", "").replace(" ", ""))
-        print(df_final)
         # format list result
         df_final = np.array(df_final)
 
@@ -186,3 +186,19 @@ class VectorData():
                      'end_time']]
         rmdf.to_csv(self.vector_file, index=False)
         return
+
+
+def select_from_df(vector_file, lonrange, latrange, timerange):
+    """
+    returns arrays with vectors and positions of the station
+    selected by time and postion
+    """
+    df = pd.read_csv(vector_file)
+    df = df[(df['longitude'] > lonrange[0]) & (df['longitude'] < lonrange[1]) &
+            (df['latitude'] > latrange[0]) & (df['latitude'] < latrange[1]) &
+            (df['start_time'] > timerange[0]) & (df['end_time'] < timerange[1])
+            ]
+    arraydata = np.array(df[['longitude', 'latitude',
+                             'vector_e', 'vector_n']]).T
+
+    return arraydata[0], arraydata[1], arraydata[2], arraydata[3]

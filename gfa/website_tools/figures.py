@@ -69,6 +69,8 @@ def wz_figure(x, y, z):
 
     # final details
     ax.coastlines(resolution='10m')
+    ax.outline_patch.set_visible(False)
+    ax.background_patch.set_visible(False)
     return fig, cbfig
 
 
@@ -237,4 +239,46 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
     """
 
     print('end function')
+    return
+
+
+def vectors_map(dir_path, x, y, ve, vn, lat_range, lon_range):
+    # plot histogram of values
+    f, (ax1, ax2) = plt.subplots(2, figsize=(12, 8))
+    ax1.hist(ve, bins=30)
+    ax2.hist(vn, bins=30)
+    f.savefig("{}/vector_hist.png".format(dir_path))
+    plt.close()
+
+    fig = plt.figure()
+    ax = plt.axes(projection=ccrs.Mercator())
+    ax.outline_patch.set_visible(False)
+    ax.background_patch.set_visible(False)
+
+    # zone to interpol
+    latmin = lat_range[0]
+    latmax = lat_range[1]
+    lonmin = lon_range[0]
+    lonmax = lon_range[1]
+
+    extend = [lonmin, lonmax, latmin, latmax]
+    ax.set_extent(extend)
+
+    vector = plt.quiver(x, y, ve, vn, transform=ccrs.PlateCarree())
+    plt.quiverkey(vector, 0., 1.015, 0.03, u'30 mm/año', labelpos="E")
+    fname = "{}/vectorsmap.png".format(dir_path)
+    fig.savefig(fname, dpi=500, bbox_inches='tight', transparent=True,
+                pad_inches=0.)
+    plt.close()
+
+    # ax.background_img(name="ne_ultra", resolution='uhigh', extent=extend)
+    scalefig = plt.figure()
+    scaleax = plt.axes(projection=ccrs.Mercator())
+    # cbar.set_ticks(self.config.colorbar_ticks)
+    scaleax.set_visible(False)
+    plt.quiverkey(vector, 0., 1.015, 0.03, u'30 mm/año', labelpos="E")
+    scalefig.savefig("{}/vectorscale.png".format(dir_path), dpi=150,
+                     bbox_inches='tight', pad_inches=0, transparent=True)
+    plt.close()
+
     return

@@ -10,6 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+from gfa.data_tools.auxfun import fractlist2dateobj
+
 
 def plot(estac, tiempo, desp):
     """
@@ -26,7 +28,7 @@ def plot(estac, tiempo, desp):
     plt.subplots_adjust(hspace=0.3)
 
     # formato ejes
-    plt.xlabel('date', fontsize=8)
+    plt.xlabel('date(yyyy-mm-dd)', fontsize=8)
     plt.ylabel('mm', fontsize=8, position=(0.5, 1.8))
 
     # change font size x and y axis
@@ -62,7 +64,7 @@ def plot(estac, tiempo, desp):
     ax3.plot(tiempo, desp[2], 'o', color='#99A3F2', markeredgewidth=0.0)
 
     f.autofmt_xdate()
-    xfmt = mdates.DateFormatter('%d-%m-%Y')
+    xfmt = mdates.DateFormatter('%Y-%m-%d')
     ax1.xaxis.set_major_formatter(xfmt)
     plt.xlim(tiempo[0], tiempo[-1])
 
@@ -81,7 +83,6 @@ def add_velocity(figure, axes, tiempo, rectas):
     """
     Add velocity trend
     """
-    tiempo = fractlist2dateobj(tiempo)
     tpart = (tiempo[-1] - tiempo[0])/5
     # muestreo
     for recta in rectas:
@@ -94,12 +95,13 @@ def add_velocity(figure, axes, tiempo, rectas):
 
         d1 = recta[0]*tr[0] + recta[1]
         d2 = recta[0]*tr[-1] + recta[1]
-        axes[0].plot((tr[0], tr[-1]), (d1[0], d2[0]),
-                     '-r', linewidth=0.8, label='East velocity')
-        axes[1].plot((tr[0], tr[-1]), (d1[1], d2[1]),
-                     '-r', linewidth=0.8, label='North velocity')
-        axes[2].plot((tr[0], tr[-1]), (d1[2], d2[2]),
-                     '-r', linewidth=0.8, label='Vertical velocity')
+        velocitytime = fractlist2dateobj(tr)
+        axes[0].plot((velocitytime[0], velocitytime[-1]), (d1[0], d2[0]),
+                     '-r', linewidth=1, label='East velocity')
+        axes[1].plot((velocitytime[0], velocitytime[-1]), (d1[1], d2[1]),
+                     '-r', linewidth=1, label='North velocity')
+        axes[2].plot((velocitytime[0], velocitytime[-1]), (d1[2], d2[2]),
+                     '-r', linewidth=1, label='Vertical velocity')
     return figure, axes
 
 

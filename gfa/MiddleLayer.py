@@ -12,8 +12,9 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
-from gfa.website_tools.cardozo_vorticity import cardozo_vorticity
+from gfa.website_tools.figures import cardozo_vorticity, vectors_map
 from gfa.data_tools.VectorData import VectorData
+from gfa.data_tools.auxfun import convert_partial_year
 
 
 """
@@ -79,7 +80,13 @@ class MiddleLayer():
                 'Select latitude min': latmin,
                 'Select latitude max': latmax,
                 'Select time start': ti,
-                'Select time end': tf
+                'Select time end': tf,
+                'Vector start': ti,
+                'Vector end': tf,
+                'Vector longitude min': lonmin,
+                'Vector longitude max': lonmax,
+                'Vector latitude min': latmin,
+                'Vector latitude max': latmax
             }
 
             if os.path.isfile(selectfile):
@@ -127,7 +134,8 @@ contact the admin')
 
         return output_plot
 
-    def middle_vector(self, station, ti, tf, vector_file):
+    def middle_vector(self, station, ti, tf, vector_file, model_list_file,
+                      paramjsonfile):
         """
 
         """
@@ -161,6 +169,36 @@ contact the admin')
         # remove the user erased vectors
         for times in remove_times:
             vdata.remove_vector(station, remove_times)
+
+        # code for map vector figure
+        with open(paramjsonfile) as json_data:
+            d = json.load(json_data)
+
+            lon_range = [d['Vector longitude min'], d['Vector longitude max']]
+            lat_range = [d['Vector latitude min'], d['Vector latitude max']]
+            maptimerange = [convert_partial_year(d['Vector start']),
+                            convert_partial_year(d['Vector end'])]
+
+            latlon, df = load_model(model_list_file)
+            vdata = VectorData(vector_file)
+            x, y, ve, vn = vdata.select(df, lon_range, lat_range, maptimerange)
+
+            vectordict = {
+                'x': x.tolist(),
+                'y': y.tolist(),
+                'vx': ve.tolist(),
+                'vy': vn.tolist()
+            }
+            print(vectordict)
+
+            vectormapfile = "{}/vectorsmap.json".format(self.user_dir)
+            with open(vectormapfile, mode='w') as f:
+                json.dump(vectordict, f)
+
+            # if os.path.isfile(pngfile): os.remove(pngfile)
+            # function that draw the map
+            # vectors_map(self.user_dir, x, y, ve, vn, lat_range, lon_range)
+
         return
 
     def middle_field(self, model_list_file, vector_file, lon_range, lat_range,
@@ -176,6 +214,9 @@ contact the admin')
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
             x, y, ve, vn = vdata.select(df, lon_range, lat_range, [ti, tf])
+            if len(x) < 4:
+                flash('Error:There is not enough vectors in the selected time')
+                return
             pngfile = "{}/field.png".format(self.user_dir)
             if os.path.isfile(pngfile):
                 os.remove(pngfile)
@@ -183,18 +224,21 @@ contact the admin')
                               lat_range, lon_range, grid, alfa)
 
             # save select param
-            fieldfile = '{}/select_param.json'.format(self.user_dir)
-            paramdict = {
-                'Field longitude min': lon_range[0],
-                'Field longitude max': lon_range[1],
-                'Field latitude min': lat_range[0],
-                'Field latitude max': lat_range[1],
-                'Field time start': time_range[0],
-                'Field time end': time_range[1]
-            }
+            select_file = '{}/select_param.json'.format(self.user_dir)
+            with open(select_file, mode='r', encoding='utf-8') as feedsjson:
+                    feeds = json.load(feedsjson)
 
-            with open(fieldfile, 'wt') as f:
-                json.dump(paramdict, f)
+            with open(select_file, mode='w', encoding='utf-8') as feedsjson:
+                paramdict = {
+                    'Field longitude min': lon_range[0],
+                    'Field longitude max': lon_range[1],
+                    'Field latitude min': lat_range[0],
+                    'Field latitude max': lat_range[1],
+                    'Field time start': time_range[0],
+                    'Field time end': time_range[1]
+                }
+                feeds.update(paramdict)
+                json.dump(feeds, feedsjson)
 
         else:
             flash('no vector file, please calculate some vectors first!')
@@ -210,9 +254,20 @@ contact the admin')
         return vector_table
 
 
+def vectormap(self, vectormapcsv):
+    """
+    """
+
+    return
+
+
 def load_model(model_list_file):
     """
     Load the model list file
+
+    returns two lists, the first is used on the map in the homepage,
+    and the second one is used in the list of stations in the lower part
+    of the homepage
     """
     # loads name of stations and json with the parameters
     data = np.loadtxt(model_list_file, delimiter="    ",
@@ -229,7 +284,8 @@ def load_model(model_list_file):
     sta_param = [data[0], data[1], data[2], poly, jumps, fourier,
                  log_i, log_sc]
     sta_param = [list(x) for x in zip(*sta_param)]  # transpose data
-    latlon = np.array([data[1], data[2]]).T.astype(float)
+    stations_name = data[0]
+    lonlat = np.array([data[1], data[2]]).T.astype(float)
 
     df = pd.DataFrame(sta_param, columns=['station', 'longitude',
                                           'latitude', 'polynomial',
@@ -250,4 +306,4 @@ def load_model(model_list_file):
         lambda x: '{0:.3f}'.format(float(x)))
     df['latitude'] = df['latitude'].apply(lambda x: '{0:.3f}'.format(float(x)))
 
-    return latlon, df
+    return [stations_name, lonlat], df
