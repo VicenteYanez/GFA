@@ -9,6 +9,9 @@ Colección de funciones para calcular un vector desde
 el modelo de trayectoria
 """
 
+class TimeSeriesError(Exception):
+    pass
+
 
 def fun_lineal(x, b, c):
     return x * b + c
@@ -68,7 +71,7 @@ def fit(intervalo, t, e, n, z):
     z = z[id_t]
     if len(t) < 10:
         print("Estacion sin datos para calcular una vel media")
-        return False
+        raise TimeSeriesError
 
     # ajuste de datos
     pva_e, cov_e = curve_fit(fun_lineal, t, e)

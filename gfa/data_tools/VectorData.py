@@ -113,7 +113,7 @@ class VectorData():
 
     def select(self, df, lonrange, latrange, timerange):
         """
-        returns arrays with vectors and positions of the station
+        returns arrays with vectors (positions, velocity and time) of the station
         selected by time and postion
         """
         newdf = copy.deepcopy(self.vecdf)
@@ -133,10 +133,10 @@ class VectorData():
                             (selectdf['start_time'] > timerange[0]) &
                             (selectdf['end_time'] < timerange[1])]
 
-        arraydata = np.array(selectdf[['longitude', 'latitude',
-                                       'vector_e', 'vector_n']]).T
+        result = np.array(selectdf[['longitude', 'latitude', 'vector_e',
+                                    'vector_n', 'start_time', 'end_time']]).T
 
-        return arraydata[0], arraydata[1], arraydata[2], arraydata[3]
+        return result[0], result[1], result[2], result[3], result[4], result[5]
 
     def check_time(self, station, ti, tf):
         """
@@ -198,7 +198,7 @@ def select_from_df(vector_file, lonrange, latrange, timerange):
             (df['latitude'] > latrange[0]) & (df['latitude'] < latrange[1]) &
             (df['start_time'] > timerange[0]) & (df['end_time'] < timerange[1])
             ]
-    arraydata = np.array(df[['longitude', 'latitude',
+    result = np.array(df[['longitude', 'latitude',
                              'vector_e', 'vector_n']]).T
 
-    return arraydata[0], arraydata[1], arraydata[2], arraydata[3]
+    return result[0], result[1], result[2], result[3]

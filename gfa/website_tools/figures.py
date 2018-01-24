@@ -1,6 +1,4 @@
 
-import copy
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
@@ -68,7 +66,7 @@ def wz_figure(x, y, z):
     cbax.set_visible(False)
 
     # final details
-    ax.coastlines(resolution='10m')
+    # ax.coastlines(resolution='10m')
     ax.outline_patch.set_visible(False)
     ax.background_patch.set_visible(False)
     return fig, cbfig
@@ -76,44 +74,24 @@ def wz_figure(x, y, z):
 
 def wk_figure(x, y, z):
     """
-    Figure of example_vorticity.py
+
     """
     fig = plt.figure()
-    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax = plt.axes(projection=ccrs.Mercator())
 
-    # extension of the map
-    latmin_m = y.min() - 0.5
-    latmax_m = y.max() + 0.5
-    lonmin_m = x.min() - 0.5
-    lonmax_m = x.max() + 0.5
     #  zone to interpol
     latmin = y.min()
     latmax = y.max()
     lonmin = x.min()
     lonmax = x.max()
 
-    paralelos = np.arange(int(latmin_m), int(latmax_m), 2)
-    meridianos = np.arange(int(lonmin_m), int(lonmax_m), 2)
-
-    extend = [lonmin_m, lonmax_m, latmin_m, latmax_m]
+    extend = [lonmin, lonmax, latmin, latmax]
     ax.set_extent(extend)
-    ax.set_xticks(meridianos, crs=ccrs.PlateCarree())
-    ax.set_yticks(paralelos, crs=ccrs.PlateCarree())
-    # ax.gridlines(crs=ccrs.PlateCarree())
 
-    x2 = []
-    y2 = []
-    z2 = []
-    for i, value in enumerate(z):
-        if np.isnan(z[i]) is False:
-            x2.append(x[i])
-            y2.append(y[i])
-            z2.append(z[i])
-
-    ax.background_img(name="ne_ultra", resolution='uhigh', extent=extend)
+    # ax.background_img(name="ne_ultra", resolution='uhigh', extent=extend)
 
     # interpolation grid
-    resolucion = 400
+    resolucion = 1000
     lats = np.linspace(latmin, latmax, resolucion)
     lons = np.linspace(lonmin, lonmax, resolucion)
     y_mapa, x_mapa = np.meshgrid(lats, lons)
@@ -121,26 +99,79 @@ def wk_figure(x, y, z):
 
     # mask nan values
     z_mapa = np.ma.masked_array(z_mapa, mask=np.isnan(z_mapa))
-    zmin = z_mapa.min()
-    zmax = z_mapa.max()
 
     # plot grid
+    zmax = z_mapa.max()
     cmap = LinearSegmentedColormap.from_list('mycmap',
                                              [(0, 'blue'),
                                               (0.8/zmax, 'turquoise'),
                                               (1.2/zmax, 'yellow'),
                                               (1, 'red')], N=256)
     # colorbar scale
-    im = ax.pcolormesh(x_mapa, y_mapa, z_mapa,
-                       cmap=cmap,
-                       transform=ccrs.PlateCarree(),
-                       vmin=zmin, vmax=zmax,
-                       alpha=0.5, zorder=1)
-    plt.colorbar(im)
+    im = ax.pcolormesh(x_mapa, y_mapa, z_mapa, vmin=z_mapa.min(), vmax=zmax,
+                       cmap=cmap, transform=ccrs.PlateCarree(), alpha=1, zorder=1)
+
+    cbfig = plt.figure()
+    cbax = plt.axes(projection=ccrs.Mercator())
+    cbar = cbfig.colorbar(im)
+    # cbar.set_ticks(self.config.colorbar_ticks)
+    cbax.set_visible(False)
 
     # final details
-    ax.coastlines(resolution='10m')
-    return fig
+    # ax.coastlines(resolution='10m')
+    ax.outline_patch.set_visible(False)
+    ax.background_patch.set_visible(False)
+    return fig, cbfig
+
+
+def s_figure(x, y, z):
+    """
+
+    """
+    fig = plt.figure()
+    ax = plt.axes(projection=ccrs.Mercator())
+
+    #  zone to interpol
+    latmin = y.min()
+    latmax = y.max()
+    lonmin = x.min()
+    lonmax = x.max()
+
+    extend = [lonmin, lonmax, latmin, latmax]
+    ax.set_extent(extend)
+
+    # ax.background_img(name="ne_ultra", resolution='uhigh', extent=extend)
+
+    # interpolation grid
+    resolucion = 1000
+    lats = np.linspace(latmin, latmax, resolucion)
+    lons = np.linspace(lonmin, lonmax, resolucion)
+    y_mapa, x_mapa = np.meshgrid(lats, lons)
+    z_mapa = griddata((x, y), z, (x_mapa, y_mapa), method='linear')
+
+    # mask nan values
+    z_mapa = np.ma.masked_array(z_mapa, mask=np.isnan(z_mapa))
+
+    # plot grid
+    zmax = z_mapa.max()
+    cmap = plt.cm.Reds
+    # colorbar scale
+    im = ax.pcolormesh(x_mapa, y_mapa, z_mapa, vmin=z_mapa.min(), vmax=zmax,
+                       cmap=cmap, transform=ccrs.PlateCarree(), alpha=1,
+                       zorder=1)
+
+    cbfig = plt.figure()
+    cbax = plt.axes(projection=ccrs.Mercator())
+    cbar = cbfig.colorbar(im)
+    cbar.set_label('|S|')
+    # cbar.set_ticks(self.config.colorbar_ticks)
+    cbax.set_visible(False)
+
+    # final details
+    # ax.coastlines(resolution='10m')
+    ax.outline_patch.set_visible(False)
+    ax.background_patch.set_visible(False)
+    return fig, cbfig
 
 
 def residual_figure(x, y, z):
@@ -187,7 +218,7 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
                       lon_range, grid, alfa=50000):
     # make grid
     gridx2d, gridy2d = np.meshgrid(np.linspace(lon_range[0], lon_range[1], 20),
-                               np.linspace(lat_range[0], lat_range[1], 60))
+                                   np.linspace(lat_range[0], lat_range[1], 60))
     gridx = gridx2d.ravel()
     gridy = gridy2d.ravel()
 
@@ -206,6 +237,7 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
                                    gradiente[2], gradiente[3])
     wz = field.vertical_vorticity2d(W)
     Wk = field.cinematic_vorticity(S, W)
+    S2 = field.frobenius_norm(S)
 
     # save data
     wz = wz*360  # to convert to degrees/year
@@ -225,18 +257,25 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
     # vertical vorticity figure
     vorticity_contour(dir_path, gridx2d, gridy2d, wz)
     fig1, cbfig = wz_figure(gridx, gridy, wz)
-    cbfig.savefig("{}/colorbar.png".format(dir_path), dpi=150,
+    cbfig.savefig("{}/wz_colorbar.png".format(dir_path), dpi=150,
                   bbox_inches='tight', pad_inches=0, transparent=True)
     fname = "{}/wz_field.png".format(dir_path)
     fig1.savefig(fname, dpi=500, edgecolor='k', bbox_inches='tight',
                  transparent=True, pad_inches=0.)
     # cinematic vorticity figure
-    """
-    fig2 = wk_figure(gridx, gridy, Wk)
+    fig2, cbfig_wk = wk_figure(gridx, gridy, Wk)
+    cbfig_wk.savefig("{}/wk_colorbar.png".format(dir_path), dpi=150,
+                     bbox_inches='tight', pad_inches=0, transparent=True)
     fname2 = "{}/wk_field.png".format(dir_path)
-    fig2.savefig(fname2, dpi=300, edgecolor='k', orientation='portrait',
-                 bbox_inches=None, pad_inches=0.2)
-    """
+    fig2.savefig(fname2, dpi=500, edgecolor='k', bbox_inches='tight',
+                 transparent=True, pad_inches=0.)
+    # cinematic vorticity figure
+    fig3, cbfig_s = s_figure(gridx, gridy, S2)
+    cbfig_s.savefig("{}/s2_colorbar.png".format(dir_path), dpi=150,
+                    bbox_inches='tight', pad_inches=0, transparent=True)
+    fname3 = "{}/s2_field.png".format(dir_path)
+    fig3.savefig(fname3, dpi=500, edgecolor='k', bbox_inches='tight',
+                 transparent=True, pad_inches=0.)
 
     print('end function')
     return

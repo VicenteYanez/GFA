@@ -54,14 +54,42 @@ hr {
         border: 0;
         transition: opacity 100ms ease-in;
       }
-#legend {
+#wz_colorbar {
         position: absolute;
         z-index:1;
         height: 350px;
         width: 10%;
         left: 2%;
         top: 3%;
-        background-image: url("/mapdata/colorbar");
+        background-image: url("/mapdata/wz_colorbar");
+        background-size: contain;
+        background-repeat: no-repeat;
+        display: block;
+        padding: 0.5em 0.5em 0.5em 0.5em;
+      }
+
+#wk_colorbar {
+        position: absolute;
+        z-index:1;
+        height: 350px;
+        width: 10%;
+        left: 2%;
+        top: 3%;
+        background-image: url("/mapdata/wk_colorbar");
+        background-size: contain;
+        background-repeat: no-repeat;
+        display: block;
+        padding: 0.5em 0.5em 0.5em 0.5em;
+      }
+
+#s2_colorbar {
+        position: absolute;
+        z-index:1;
+        height: 350px;
+        width: 10%;
+        left: 2%;
+        top: 3%;
+        background-image: url("/mapdata/s2_colorbar");
         background-size: contain;
         background-repeat: no-repeat;
         display: block;
@@ -70,4 +98,47 @@ hr {
 
 #map {
   z-index: 0;
+}
+
+.ol-popup {
+       position: absolute;
+       background-color: white;
+       -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+       filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+       padding: 15px;
+       border-radius: 10px;
+       border: 1px solid #cccccc;
+       bottom: 12px;
+       left: -50px;
+       min-width: 280px;
+     }
+.ol-popup:after, .ol-popup:before {
+ top: 100%;
+ border: solid transparent;
+ content: " ";
+ height: 0;
+ width: 0;
+ position: absolute;
+ pointer-events: none;
+}
+.ol-popup:after {
+ border-top-color: white;
+ border-width: 10px;
+ left: 48px;
+ margin-left: -10px;
+}
+.ol-popup:before {
+ border-top-color: #cccccc;
+ border-width: 11px;
+ left: 48px;
+ margin-left: -11px;
+}
+.ol-popup-closer {
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ right: 8px;
+}
+.ol-popup-closer:after {
+ content: "✖";
 }

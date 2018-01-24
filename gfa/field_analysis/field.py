@@ -415,11 +415,14 @@ def cinematic_vorticity(tensorS, tensorW):
     return Wk
 
 
-def traza_tensor(tensor, grado):
-    traza = 0
-    for i, valor in enumerate(tensor):
-        traza += valor[i]**grado
-    return traza
+def frobenius_norm(tensor):
+    traza2 = 0
+    for s1 in tensor:
+        for s2 in s1:
+            traza2 += s2**2
+    T2 = np.sqrt(traza2)
+
+    return T2
 
 
 def principal_stress(tensors):

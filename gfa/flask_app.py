@@ -17,6 +17,7 @@ import numpy as np
 from gfa.log_config import Logger
 from gfa.MiddleLayer import MiddleLayer, load_model
 from gfa.load_param import Config
+from gfa.gnss_analysis.fun_vector import TimeSeriesError
 
 
 def PrintException():
@@ -111,7 +112,7 @@ def login_page():
     except Exception as e:
         message = "A error has been raised, please contact the webmaster"
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash(message)
         return render_template("login.html")
 
@@ -157,6 +158,7 @@ def homepage():
         if os.path.isfile(model_list_file):
             lonlat, df = load_model(model_list_file)
             stations_param = np.array(df)
+
             # empty for the rest of the fields
             df_withvectors = copy.deepcopy(df)
             df_withvectors.assign(vector_e=np.nan, vector_n=np.nan,
@@ -171,8 +173,11 @@ def homepage():
             stations_param = []
             df_withvectors = []
             if os.path.isfile(generalsolutionlist):
+                station_name = np.loadtxt(generalsolutionlist, usecols=[0],
+                                          skiprows=1, dtype=str).tolist()
                 lonlat = np.loadtxt(generalsolutionlist, usecols=[1, 2],
                                     skiprows=1).tolist()
+                lonlat = [station_name, lonlat]
             else:
                 lonlat = []
         # load the coordinates of the area in wich is going to be displayed
@@ -200,18 +205,17 @@ def homepage():
 
         if os.path.isfile(vectormapfile):
             with open(vectormapfile, 'r') as f:
-                vectors2plot = json.load(f)
-                vectors2plot = np.array([vectors2plot['x'], vectors2plot['y'],
-                                     vectors2plot['vx'], vectors2plot['vy']]).T
-                vectors2plot = vectors2plot.tolist()
-            print(vectors2plot)
-        else:
-            vectors2plot = []
+                v2plot = json.load(f)
+                v2plot = np.array([v2plot['x'], v2plot['y'], v2plot['vx'],
+                                   v2plot['vy'], v2plot['ti'], v2plot['tf']]).T
+                v2plot = v2plot.tolist()
 
+        else:
+            v2plot = []
         return render_template("index.html", stations=stations_param,
                                lonlat=lonlat, vectors=df_withvectors,
                                fieldarea=fieldarea, velocityarea=velocityarea,
-                               vectors2plot=vectors2plot,
+                               vectors2plot=v2plot,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
@@ -253,7 +257,7 @@ def edit(station):
         error = 'Exception. Please, check your inputs (edit {}).\
 If the error repeats contact the admin'.format(station)
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash(error)
 
     return redirect(url_for('homepage'))
@@ -272,7 +276,7 @@ def plots(station):
         return send_file(filename)
     except (ValueError, IOError) as e:
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash('Sorry, error ploting {}'.format(station))
         return 'error'
 
@@ -316,10 +320,15 @@ def calc_vector():
             middle.middle_vector(station, tv1, tv2, vector_file,
                                  model_list_file, paramjsonfile)
             flash('{} vector sucessfull'.format(station))
-    except ValueError as e:
-        log = Logger()
-        log.logger.error(e)
-        flash('Start time should be lower than the end time')
+    except (ValueError, TimeSeriesError) as e:
+        if e is ValueError:
+            log = Logger()
+            log.logger.error(PrintException())
+            flash('Start time should be lower than the end time')
+        elif e is TimeSeriesError:
+            log = Logger()
+            log.logger.error(PrintException())
+            flash('Time Series empty in the selected time')
     return redirect(url_for('homepage'))
 
 
@@ -362,7 +371,7 @@ def download():
 
     except FileNotFoundError as e:
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash('error retreaving the zip file')
         return redirect(url_for('homepage'))
 
@@ -402,7 +411,7 @@ maximun value')
         return redirect(url_for('homepage'))
     except (ValueError, IOError) as e:
         log = Logger()
-        log.logger.error(e)
+        log.logger.error(PrintException())
         flash('Sorry, error value error, check your inputs')
         return redirect(url_for('homepage'))
 
@@ -420,7 +429,7 @@ def mapdata(content):
         else:
             mapdata = ''
             return mapdata
-    elif content == 'fieldfigure':
+    elif content == 'wz_figure':
         wzfigurefile = "{}{}/wz_field.png".format(output_dir,
                                                   session['username'])
         if os.path.isfile(wzfigurefile):
@@ -430,9 +439,9 @@ def mapdata(content):
             mapdata = ''
             return mapdata
 
-    elif content == 'colorbar':
-        colorbarfile = "{}{}/colorbar.png".format(output_dir,
-                                                  session['username'])
+    elif content == 'wz_colorbar':
+        colorbarfile = "{}{}/wz_colorbar.png".format(output_dir,
+                                                     session['username'])
         if os.path.isfile(colorbarfile):
             mapdata = colorbarfile
             return send_file(mapdata, as_attachment=True)
@@ -440,6 +449,45 @@ def mapdata(content):
             mapdata = ''
             return mapdata
 
+    elif content == 'wk_figure':
+        figurefile = "{}{}/wk_field.png".format(output_dir,
+                                                session['username'])
+        if os.path.isfile(figurefile):
+            mapdata = figurefile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
+
+    elif content == 'wk_colorbar':
+        colorbarfile = "{}{}/wk_colorbar.png".format(output_dir,
+                                                     session['username'])
+        if os.path.isfile(colorbarfile):
+            mapdata = colorbarfile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
+
+    elif content == 's2_figure':
+        figurefile = "{}{}/s2_field.png".format(output_dir,
+                                                session['username'])
+        if os.path.isfile(figurefile):
+            mapdata = figurefile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
+
+    elif content == 's2_colorbar':
+        colorbarfile = "{}{}/s2_colorbar.png".format(output_dir,
+                                                     session['username'])
+        if os.path.isfile(colorbarfile):
+            mapdata = colorbarfile
+            return send_file(mapdata, as_attachment=True)
+        else:
+            mapdata = ''
+            return mapdata
     else:
         return ''
 

@@ -4,7 +4,6 @@ import time
 import os
 import shutil
 import json
-import re
 
 import numpy as np
 from flask import flash
@@ -12,9 +11,9 @@ import pandas as pd
 
 import gfa.log_config as log
 from gfa.load_param import Config
-from gfa.website_tools.figures import cardozo_vorticity, vectors_map
+from gfa.website_tools.figures import cardozo_vorticity
 from gfa.data_tools.VectorData import VectorData
-from gfa.data_tools.auxfun import convert_partial_year
+from gfa.data_tools.auxfun import convert_partial_year, datelist2strlist
 
 
 """
@@ -153,6 +152,10 @@ contact the admin')
             tif = np.array([ti, tf]).T
             remove_times = []
 
+        # remove the user erased vectors
+        for times in remove_times:
+            vdata.remove_vector(station, remove_times)
+
         # calculate and save the vectors
         from gfa.scripts import ts_vector
         for times in tif:
@@ -166,10 +169,6 @@ contact the admin')
                 vtype = 'fit'
             ts_vector.main(self.user, station, vtype, [times[0], times[1]])
 
-        # remove the user erased vectors
-        for times in remove_times:
-            vdata.remove_vector(station, remove_times)
-
         # code for map vector figure
         with open(paramjsonfile) as json_data:
             d = json.load(json_data)
@@ -181,15 +180,20 @@ contact the admin')
 
             latlon, df = load_model(model_list_file)
             vdata = VectorData(vector_file)
-            x, y, ve, vn = vdata.select(df, lon_range, lat_range, maptimerange)
+            x, y, ve, vn, tvmap1, tvmap2 = vdata.select(df, lon_range,
+                                                        lat_range, maptimerange)
+
+            tvmap1 = datelist2strlist(tvmap1)
+            tvmap2 = datelist2strlist(tvmap2)
 
             vectordict = {
                 'x': x.tolist(),
                 'y': y.tolist(),
                 'vx': ve.tolist(),
-                'vy': vn.tolist()
+                'vy': vn.tolist(),
+                'ti': tvmap1,
+                'tf': tvmap2
             }
-            print(vectordict)
 
             vectormapfile = "{}/vectorsmap.json".format(self.user_dir)
             with open(vectormapfile, mode='w') as f:
@@ -213,11 +217,12 @@ contact the admin')
         # load vectors from file
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
-            x, y, ve, vn = vdata.select(df, lon_range, lat_range, [ti, tf])
+            x, y, ve, vn, tv1, tv2 = vdata.select(df, lon_range, lat_range,
+                                                  [ti, tf])
             if len(x) < 4:
                 flash('Error:There is not enough vectors in the selected time')
                 return
-            pngfile = "{}/field.png".format(self.user_dir)
+            pngfile = "{}/wz_field.png".format(self.user_dir)
             if os.path.isfile(pngfile):
                 os.remove(pngfile)
             cardozo_vorticity(self.user_dir, x, y, ve, vn,
