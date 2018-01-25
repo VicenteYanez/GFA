@@ -133,10 +133,11 @@ class VectorData():
                             (selectdf['start_time'] > timerange[0]) &
                             (selectdf['end_time'] < timerange[1])]
 
-        result = np.array(selectdf[['longitude', 'latitude', 'vector_e',
-                                    'vector_n', 'start_time', 'end_time']]).T
+        result1 = np.array(selectdf[['longitude', 'latitude', 'vector_e',
+                                    'vector_n']]).T
+        result2 = np.array(selectdf[['start_time', 'end_time']]).T
 
-        return result[0], result[1], result[2], result[3], result[4], result[5]
+        return result1[0], result1[1], result1[2], result1[3], result2[0], result2[1]
 
     def check_time(self, station, ti, tf):
         """

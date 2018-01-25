@@ -29,12 +29,14 @@ def main(codigo, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
         exit()
 
     # path archivos
-    lista_gps = Config.config['PATH']['ListaGPS']
-    series_dir = Config.config['PATH']['GPSdata']
+    ts_path = Config.config['PATH']['timeseries']
+    lista_gps = '{}{}'.format(ts_path, Config.config['PATH']['ListaGPS'])
+    series_dir = '{}{}'.format(ts_path, Config.config['PATH']['GPSdata'])
     save_dir = Config.config['PATH']['output_dir']
+    generalsolution_dir = Config.config['PATH']['general_solution']
     # optional: dir of the trajectory model
-    model_dir = '{}general_solution/Modelo/'.format(save_dir)
-    m_ls = '{}general_solution/resume.txt'.format(save_dir)
+    model_dir = '{}Modelo/'.format(generalsolution_dir)
+    m_ls = '{}resume.txt'.format(generalsolution_dir)
 
     # check if save_dir exist
     select_dir = '{}{}'.format(save_dir, codigo)

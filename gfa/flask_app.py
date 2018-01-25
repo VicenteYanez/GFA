@@ -9,6 +9,7 @@ import json
 import gc
 import sys
 import linecache
+import shutil
 
 from flask import Flask, render_template, flash, redirect, request, url_for
 from flask import session, send_file
@@ -34,6 +35,8 @@ def PrintException():
 
 
 filedir = os.path.dirname(os.path.realpath(__file__))
+# list with the time series databases available
+gnss_databases = [s for s in Config.config['WEB']['databases'].split(',')]
 
 app = Flask(__name__, static_folder='{}/../static'.format(filedir),
             template_folder='{}/../templates'.format(filedir))
@@ -127,7 +130,7 @@ def method_not_found(e):
     return render_template("405.html")
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 @login_required
 def homepage():
     # user's directory
@@ -138,22 +141,9 @@ def homepage():
     paramfile = "{}/select_param.json".format(userdir)
     vectormapfile = "{}/vectorsmap.json".format(userdir)
 
-    generalsolutionlist = '{}general_solution/resume.txt'.format(
-        Config.config['PATH']['output_dir'])
+    generalsolutionlist = '{}/resume.txt'.format(
+        Config.config['PATH']['general_solution'])
     try:
-        # manage the request of data from the user
-        if request.method == 'POST' and request.form['btn_select'] == 'Select':
-            latmin = float(request.form['latmin'])
-            latmax = float(request.form['latmax'])
-            lonmin = float(request.form['lonmin'])
-            lonmax = float(request.form['lonmax'])
-            ti = request.form['t_inicial']
-            tf = request.form['t_final']
-
-            middle = MiddleLayer(session['username'])
-            middle.middle_select(lonmin, lonmax, latmin, latmax, ti, tf)
-            flash('finished the data loading')
-
         # if there's data load the model from the station requested by the user
         if os.path.isfile(model_list_file):
             lonlat, df = load_model(model_list_file)
@@ -215,18 +205,42 @@ def homepage():
         return render_template("index.html", stations=stations_param,
                                lonlat=lonlat, vectors=df_withvectors,
                                fieldarea=fieldarea, velocityarea=velocityarea,
-                               vectors2plot=v2plot,
+                               vectors2plot=v2plot, databases=gnss_databases,
                                herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     except TypeError as e:
-        error = 'Fatal Exception. Please, check your query. If the error \
-repeats contact the admin'
+        error = 'Fatal Exception'
         log = Logger()
         log.logger.error(PrintException())
         flash(error)
     return render_template("index.html", stations=[], lonlat=[], vectors=[],
                            fieldarea=[], velocityarea=[], vectors2plot=[],
-                           herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+                           herenow=strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+                           databases=gnss_databases)
+
+
+@app.route('/select', methods=['POST'])
+@login_required
+def select():
+    try:
+        # manage the request of data from the user
+        if request.method == 'POST' and request.form['btn_select'] == 'Select':
+            latmin = float(request.form['latmin'])
+            latmax = float(request.form['latmax'])
+            lonmin = float(request.form['lonmin'])
+            lonmax = float(request.form['lonmax'])
+            ti = request.form['t_inicial']
+            tf = request.form['t_final']
+
+            middle = MiddleLayer(session['username'])
+            middle.middle_select(lonmin, lonmax, latmin, latmax, ti, tf)
+            flash('finished the data loading')
+    except TypeError as e:
+        error = 'Error. Please, check your query'
+        log = Logger()
+        log.logger.error(PrintException())
+        flash(error)
+    return redirect(url_for('homepage'))
 
 
 @app.route('/about/')
@@ -386,34 +400,29 @@ def field():
                             session['username'])
     vector_file = "{}/vectors.txt".format(userdir)
     model_list_file = "{}/modelo_lista.txt".format(userdir)
-    try:
-        if request.method == 'POST' and request.form['btn_field'] == 'Plot':
-            latmin = float(request.form['latmin'])
-            latmax = float(request.form['latmax'])
-            lonmin = float(request.form['lonmin'])
-            lonmax = float(request.form['lonmax'])
-            ti = request.form['t_inicial']
-            tf = request.form['t_final']
+    if request.method == 'POST' and request.form['btn_field'] == 'Plot':
+        latmin = float(request.form['latmin'])
+        latmax = float(request.form['latmax'])
+        lonmin = float(request.form['lonmin'])
+        lonmax = float(request.form['lonmax'])
+        ti = request.form['t_inicial']
+        tf = request.form['t_final']
 
-            grid_density = float(request.form['grid'])
-            alfa = float(request.form['alfa'])
-            # check input values
-            if grid_density > 100000 or grid_density < 100:
-                raise ValueError
-            if latmin > latmax or lonmin > lonmax:
-                flash('Lotitude or Latitude minimun value is bigger than the\
+        grid_density = float(request.form['grid'])
+        alfa = float(request.form['alfa'])
+        # check input values
+        if grid_density > 100000 or grid_density < 100:
+            raise ValueError
+        if latmin > latmax or lonmin > lonmax:
+            flash('Lotitude or Latitude minimun value is bigger than the\
 maximun value')
-                raise ValueError
-        middle = MiddleLayer(session['username'])
-        middle.middle_field(model_list_file, vector_file, [lonmin, lonmax],
-                            [latmin, latmax], [ti, tf], grid_density, alfa)
+            raise ValueError
+    middle = MiddleLayer(session['username'])
+    middle.middle_field(model_list_file, vector_file, [lonmin, lonmax],
+                        [latmin, latmax], [ti, tf], grid_density, alfa)
 
-        return redirect(url_for('homepage'))
-    except (ValueError, IOError) as e:
-        log = Logger()
-        log.logger.error(PrintException())
-        flash('Sorry, error value error, check your inputs')
-        return redirect(url_for('homepage'))
+    return redirect(url_for('homepage'))
+
 
 
 @app.route('/mapdata/<content>')
@@ -490,6 +499,38 @@ def mapdata(content):
             return mapdata
     else:
         return ''
+
+
+@app.route('/selectdb/', methods=['POST'])
+@login_required
+def select_db():
+    """
+    it makes the change between different GNSS databases
+    """
+    output_dir = Config.config['PATH']['output_dir']
+    userdir = "{}{}".format(output_dir, session['username'])
+    os.chdir(output_dir)
+
+    try:
+        if request.method == 'POST' and request.form['btn_db'] == 'Select DB':
+            selected_db = request.form['select_db']
+            Config.config['PATH']['general_solution'] = "{}general_solution_{}/".format(output_dir, selected_db)
+            Config.config['PATH']['GPSdata'] = "txtfiles_{}".format(selected_db)
+            Config.config['PATH']['ListaGPS'] = "station_list_{}.txt".format(selected_db)
+
+            # save changes on ini file
+            with open('./parameters.ini', 'w') as configfile:
+                Config.config.write(configfile)
+            if os.path.isdir(userdir):
+                shutil.rmtree(userdir)
+
+        return redirect(url_for('homepage'))
+
+    except FileNotFoundError as e:
+        log = Logger()
+        log.logger.error(PrintException())
+        flash('sorry, error selecting the DB')
+        return redirect(url_for('homepage'))
 
 
 # run function

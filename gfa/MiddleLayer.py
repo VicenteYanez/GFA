@@ -50,8 +50,6 @@ class MiddleLayer():
     def __init__(self, user):
         from gfa.load_param import Config
         self.user = user
-        self.lista_gps = Config.config['PATH']['ListaGPS']
-        self.series_dir = Config.config['PATH']['GPSdata']
         self.output_dir = Config.config['PATH']['output_dir']
         self.user_dir = "{}{}".format(self.output_dir, self.user)
 

@@ -96,11 +96,12 @@ def vector(alias, station, type, period):
 
 
 @cli.command()
-def buildmodelall():
+@click.option('--alias', default='default', help='identifier for your query')
+def buildmodelall(alias):
     """
     Script that calculates a automatic model for all the station
     """
-    ts_buildmodelall.main()
+    ts_buildmodelall.main(alias)
     return
 
 
