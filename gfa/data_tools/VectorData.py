@@ -135,9 +135,12 @@ class VectorData():
 
         result1 = np.array(selectdf[['longitude', 'latitude', 'vector_e',
                                     'vector_n']]).T
-        result2 = np.array(selectdf[['start_time', 'end_time']]).T
+        # result2 = np.array(selectdf[['start_time', 'end_time']]).T
+        result21 = selectdf['start_time'].tolist()
+        result22 = selectdf['end_time'].tolist()
 
-        return result1[0], result1[1], result1[2], result1[3], result2[0], result2[1]
+
+        return result1[0], result1[1], result1[2], result1[3], result21, result22
 
     def check_time(self, station, ti, tf):
         """
