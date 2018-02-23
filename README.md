@@ -9,9 +9,9 @@ I am sorry if you read any misspells o grammatical error. English is my second l
 ## Andes 3DB
 For the chilean investigation proyect "Active Tectonics and Volcanism at the Southern", a web based GUI was made. The GUI was developed using Python Flask. It provides
 
-![alt text](https://raw.githubusercontent.com/VicenteYanez/GFA/master/static/images/homepage.png)
+![alt text](https://github.com/VicenteYanez/GFA/blob/develop/static/images/homepage.png?raw=true)
 
-![alt text](https://raw.githubusercontent.com/VicenteYanez/GFA/master/static/images/homepage2.png)
+![alt text](https://github.com/VicenteYanez/GFA/blob/develop/static/images/homepage.png?raw=true)
 
 ## Cientific development using GFA
 
