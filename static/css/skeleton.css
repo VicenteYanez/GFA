@@ -128,8 +128,11 @@ body {
   margin: 0 0 100px; /* for footer*/
   line-height: 1.6;
   font-weight: 400;
+  min-height: 1100px;
   font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #222;}
+  color: #222;
+  background-color: white;
+}
 
 
 /* Typography

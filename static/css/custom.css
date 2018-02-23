@@ -9,7 +9,7 @@
     min-width: 100%;
     background-color: black;
     color: white;
-    bottom: -8%;
+    bottom: -200px;
     position: absolute;
     min-height: 250px;
 }
@@ -41,6 +41,19 @@ hr {
 .tabbar{
   width:100%;
 }
+.tabbar-button{
+  min-height: 50px;
+  background-color: black;
+  color: white;
+  display: inline-block;
+  border-radius: 0 0 0 0;
+  border: 0;
+}
+.tabbar-button:hover,
+.tabbar-button:focus {
+  color: #333;
+  background-color: rgba(125, 125, 125, 0.5);
+  outline: 0; }
 /* label */
 #info {
         z-index: 1;
@@ -60,7 +73,7 @@ hr {
         height: 350px;
         width: 10%;
         left: 2%;
-        top: 3%;
+        top: 25%;
         background-image: url("/mapdata/wz_colorbar");
         background-size: contain;
         background-repeat: no-repeat;
@@ -74,7 +87,7 @@ hr {
         height: 350px;
         width: 10%;
         left: 2%;
-        top: 3%;
+        top: 25%;
         background-image: url("/mapdata/wk_colorbar");
         background-size: contain;
         background-repeat: no-repeat;
@@ -88,7 +101,7 @@ hr {
         height: 350px;
         width: 10%;
         left: 2%;
-        top: 3%;
+        top: 25%;
         background-image: url("/mapdata/s2_colorbar");
         background-size: contain;
         background-repeat: no-repeat;

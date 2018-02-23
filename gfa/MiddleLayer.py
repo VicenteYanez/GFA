@@ -139,10 +139,16 @@ contact the admin')
         # ti and tf are a string with parenthesis, first of all
         # we need to remove ir and turning they in a
         # list of floats
-        ti = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
-              for s in ti.split(',')]
-        tf = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
-              for s in tf.split(',')]
+        res = False  # var that changes to true when a vector is calculated
+        if ti == '' or tf == '':
+            ti = []
+            tf = []
+            res = True
+        else:
+            ti = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
+                  for s in ti.split(',')]
+            tf = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
+                  for s in tf.split(',')]
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
             tif, remove_times = vdata.check_time(station, ti, tf)
@@ -165,7 +171,14 @@ contact the admin')
                 vtype = 'tangent'
             elif times[0] < times[1]:
                 vtype = 'fit'
-            ts_vector.main(self.user, station, vtype, [times[0], times[1]])
+            res = ts_vector.main(self.user, station, vtype, [times[0],
+                                                             times[1]])
+
+        # if ts_vector returns false (some problem when calculating the vector)
+        if res is False:
+            flash('error calculating the vector, please check the input and \
+output time')
+            return
 
         # code for map vector figure
         with open(paramjsonfile) as json_data:

@@ -26,3 +26,5 @@ def main(identifier, estacion, vector_type, t):
         res = calc_vector(estacion, file_modelo, vector_file, vector_type, t0)
     elif vector_type == "fit":
         res = calc_vector(estacion, file_modelo, vector_file, vector_type, t)
+
+    return res

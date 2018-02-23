@@ -65,14 +65,14 @@ def main(codigo, station, addmodel, addvector):
             # plot
             f, axes = pltfun.add_velocity(f, axes, tsdata[1][0], vectors)
             print('Vector added')
-        except FileNotFoundError as err:
+        except (FileNotFoundError, OSError) as err:
             print("Error: Vector file not found")
             log = Logger()
             log.logger.error(err)
-
     else:
         print('Vector not added')
 
     # save plot
     pltfun.save_figure(f, savefile)
     plt.close()
+    return

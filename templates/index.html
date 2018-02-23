@@ -2,454 +2,426 @@
 
 {% block body %}
 <div class="row">
-    <div class="seven columns">
-      <div id="wz_colorbar" style="display: none"></div>
-      <div id="wk_colorbar" style="display: none"></div>
-      <div id="s2_colorbar" style="display: none"></div>
-      <div id="map" class="map">
-      <div id="popup" class="ol-popup">
-        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-        <div id="popup-content"></div>
-      </div>
-        <pre id="info"/>
-        <script type="text/javascript">
-      // default zoom, center and rotation
-        var zoom = 4;
-        var center = ol.proj.fromLonLat([-70.0, -39.0]);
-        var rotation = 0;
+  <div class="twelve columns">
+    <div class="tabbar">
+       <button class="tabbar-button" onclick="openTab('0_Map', 'tabs0')" checked>Map</button>
+       <button class="tabbar-button" onclick="openTab('0_Stations', 'tabs0')">Stations</button>
+       <hr>
+    </div>
+  </div>
+</div>
+<div id="0_Map" class="tabs0">
+  <div class="row">
+      <div class="seven columns">
+        <div id="wz_colorbar" style="display: none"></div>
+        <div id="wk_colorbar" style="display: none"></div>
+        <div id="s2_colorbar" style="display: none"></div>
+        <div id="map" class="map">
+        <div id="popup" class="ol-popup">
+          <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+          <div id="popup-content"></div>
+        </div>
+          <pre id="info"/>
+          <script type="text/javascript">
+        // default zoom, center and rotation
+          var zoom = 4;
+          var center = ol.proj.fromLonLat([-70.0, -39.0]);
+          var rotation = 0;
 
-        if (window.location.hash !== '') {
-          // try to restore center, zoom-level and rotation from the URL
-          var hash = window.location.hash.replace('#map=', '');
-          var parts = hash.split('/');
-          if (parts.length === 4) {
-            zoom = parseInt(parts[0], 10);
-            center = [
-              parseFloat(parts[1]),
-              parseFloat(parts[2])
-            ];
-            rotation = parseFloat(parts[3]);
-          }
-        }
-
-        // station points
-        // /////////////////////////
-        var fill = new ol.style.Fill({color: 'black'});
-        var styles = {
-         'square': new ol.style.Style({
-           image: new ol.style.RegularShape({
-             fill: fill,
-             points: 4,
-             radius: 5,
-             angle: Math.PI / 4
-           })
-         }),
-        }
-        var coordinates = [{% for i in lonlat[1] %}
-          [{{i[0]}}, {{i[1]}}],
-          {% endfor %}];
-        var stations_name = [{% for i in lonlat[0] %}
-                                  '{{i}}',
-                             {% endfor %}]
-        count = coordinates.length;
-        var pointsfeatures = new Array(count);
-        for (var i = 0; i < count; ++i) {
-          pointsfeatures[i] = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(coordinates[i])));
-          pointsfeatures[i].setStyle(styles['square']);
-          pointsfeatures[i].setId(stations_name[i])
-        }
-        var pointssource = new ol.source.Vector({
-          features: pointsfeatures
-        });
-        var PointsLayer = new ol.layer.Vector({
-          source: pointssource
-        });
-
-        /* *************************************************************
-        FIELD IMAGES
-        **************************************************************** */
-        // vertical vorticity image
-        var posarray = {{ fieldarea }};
-        var fieldpos1 = ol.proj.fromLonLat([posarray[0], posarray[2]]);
-        var fieldpos2 = ol.proj.fromLonLat([posarray[1], posarray[3]]);
-
-        var verticalvorticityLayer = new ol.layer.Image({
-          source: new ol.source.ImageStatic({
-            url: '/mapdata/wz_figure?date={{ herenow }}',
-            projection: 'EPSG:3857',
-            imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
-          }),
-          opacity:0.5
-        });
-
-        // cinematic vorticity image
-        var cinematicvorticityLayer = new ol.layer.Image({
-          source: new ol.source.ImageStatic({
-            url: '/mapdata/wk_figure?date={{ herenow }}',
-            projection: 'EPSG:3857',
-            imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
-          }),
-          opacity:0.5
-        });
-
-        // stretching magnitude image
-        var stretchingLayer = new ol.layer.Image({
-          source: new ol.source.ImageStatic({
-            url: '/mapdata/s2_figure?date={{ herenow }}',
-            projection: 'EPSG:3857',
-            imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
-          }),
-          opacity:0.5
-        });
-
-        /* ************************************************************
-        Map Creations
-        ************************************************************** */
-
-        // url opentopomap: 'http://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png'
-        // url opencyclemap "https://{s}.tile.thunderforest.com/cycle/${z}/${x}/${y}.png?apikey=ab2ec8caac05494292c6ecea0e39fde1"
-        var map = new ol.Map({
-          target: 'map',
-          layers: [
-            new ol.layer.Tile({
-              source: new ol.source.OSM()
-            }),
-            PointsLayer
-          ],
-          controls: ol.control.defaults({
-            attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
-              collapsible: false
-            })
-          }),
-          view: new ol.View({
-            center: center,
-            zoom: zoom,
-            rotation: rotation
-          })
-        });
-
-        cyclemap = new ol.layer.Tile({
-          source: new ol.source.XYZ({
-            url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=ab2ec8caac05494292c6ecea0e39fde1'
-          })
-        });
-        map.addLayer(cyclemap)
-
-        // Create the graticule component
-       var graticule = new ol.Graticule({
-         // the style to use for the lines, optional.
-         strokeStyle: new ol.style.Stroke({
-           color: 'rgba(120,120,120,0.5)',
-           width: 1,
-           lineDash: [0.5, 4]
-         }),
-         showLabels: true
-       });
-
-       graticule.setMap(map);
-
-       /* *********************************************************
-       Velocity Vectors
-       ************************************************************ */
-
-       // function for cut the input vector variable by its time
-       function select_arrows(arrows, ta1, ta2, ti, tf) {
-         new_arrows = [];
-         for ( i = 0; i < arrows.length; i++) {
-           if (ti <= ta2[i] && tf >= ta1[i]) {
-             new_arrows.push(arrows[i]);
-           }
-         }
-         return new_arrows
-       }
-
-       $(window).bind("load", function() {
-         var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
-         var arrows_points = [{% for i in vectors2plot %}
-                               [ [{{i[0]}}, {{i[1]}}],
-                               [{{i[0]}}+{{i[2]}}*arrow_scale,
-                                {{i[1]}}+{{i[3]}}*arrow_scale]],
-                                {% endfor %}];
-         var arrows_t1 = [{% for i in vectors2plot %}
-                            new Date("{{i[4]}}"),
-                        {% endfor %}];
-
-         var arrows_t2 = [{% for i in vectors2plot %}
-                            new Date("{{i[5]}}"),
-                        {% endfor %}];
-         var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
-
-         // get the start and final time for the vectors on the map
-         vplotstart = new Date(document.getElementById('vplotstart').value);
-         vplotend = new Date(document.getElementById('vplotend').value);
-         arrows_points = select_arrows(arrows_points, arrows_t1, arrows_t2,  vplotstart, vplotend);
-
-
-         var arrowStyleFunction = function(feature_arrow) {
-            var arrow_styles = [
-              // linestring
-              new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                  color: '#000000',
-                  width: 2
-                })
-              })
-            ];
-            var lineStringsArray = feature_arrow.getGeometry().getLineStrings();
-            for (var i = 0; i < lineStringsArray.length; i++) {
-              lineStringsArray[i].forEachSegment(function(start, end) {
-                var dx = end[0] - start[0];
-                var dy = end[1] - start[1];
-                var rotation = Math.atan2(dy, dx);
-                arrow_styles.push(new ol.style.Style({
-                  geometry: new ol.geom.Point(end),
-                  image: new ol.style.Icon({
-                    src: "{{url_for('static', filename='images/arrow.png')}}",
-                    rotateWithView: false,
-                    rotation: -rotation
-                  })
-                }));
-              });
+          if (window.location.hash !== '') {
+            // try to restore center, zoom-level and rotation from the URL
+            var hash = window.location.hash.replace('#map=', '');
+            var parts = hash.split('/');
+            if (parts.length === 4) {
+              zoom = parseInt(parts[0], 10);
+              center = [
+                parseFloat(parts[1]),
+                parseFloat(parts[2])
+              ];
+              rotation = parseFloat(parts[3]);
             }
-            return arrow_styles;
-          };
-          var VelocityVectorSource = new ol.source.Vector({});
-          VelocityVectorLayer = new ol.layer.Vector({
-                                  source: VelocityVectorSource,
-                                  style: arrowStyleFunction
-                                })
+          }
 
-
-          var arrows = new ol.geom.MultiLineString(arrows_points);
-          arrows.transform('EPSG:4326', 'EPSG:3857');
-          var VelocityVectorFeature = new ol.Feature({
-            name: "Vector Feature",
-            geometry: arrows,
-            style: arrowStyleFunction
-          });
-          VelocityVectorSource.addFeature(VelocityVectorFeature);
-          map.addLayer(VelocityVectorLayer)
-
-        // refresh velocity vectors scale when zoom change
-        map.getView().on('change:resolution', function(){
-          var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
-          var arrows_points = [{% for i in vectors2plot %}
-                                [ [{{i[0]}}, {{i[1]}}],
-                                [{{i[0]}}+({{i[2]}}*arrow_scale),
-                                 {{i[1]}}+({{i[3]}}*arrow_scale)]],
+          // station points
+          // /////////////////////////
+          var fill = new ol.style.Fill({color: 'black'});
+          var styles = {
+           'square': new ol.style.Style({
+             image: new ol.style.RegularShape({
+               fill: fill,
+               points: 4,
+               radius: 5,
+               angle: Math.PI / 4
+             })
+           }),
+          }
+          var coordinates = [{% for i in lonlat[1] %}
+            [{{i[0]}}, {{i[1]}}],
             {% endfor %}];
-          vplotstart = new Date(document.getElementById('vplotstart').value);
-          vplotend = new Date(document.getElementById('vplotend').value);
-          arrows_points = select_arrows(arrows_points, arrows_t1, arrows_t2, vplotstart, vplotend);
-          var arrows = new ol.geom.MultiLineString(arrows_points);
-          arrows.transform('EPSG:4326', 'EPSG:3857');
-          VelocityVectorFeature.setGeometry(arrows);
-        });
-      });
-
-        /* *********************************************************
-        Map Pop Up
-        ************************************************************ */
-        /**
-       * Elements that make up the popup.
-       */
-        var container = document.getElementById('popup');
-        var content = document.getElementById('popup-content');
-        var closer = document.getElementById('popup-closer');
-
-        /**
-       * Create an overlay to anchor the popup to the map.
-       */
-        var overlay = new ol.Overlay({
-          element: container,
-          autoPan: true,
-          autoPanAnimation: {
-            duration: 250
+          var stations_name = [{% for i in lonlat[0] %}
+                                    '{{i}}',
+                               {% endfor %}]
+          count = coordinates.length;
+          var pointsfeatures = new Array(count);
+          for (var i = 0; i < count; ++i) {
+            pointsfeatures[i] = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(coordinates[i])));
+            pointsfeatures[i].setStyle(styles['square']);
+            pointsfeatures[i].setId(stations_name[i])
           }
-        });
-
-        /**
-       * Add a click handler to hide the popup.
-       * @return {boolean} Don't follow the href.
-       */
-        closer.onclick = function() {
-          overlay.setPosition(undefined);
-          closer.blur();
-          return false;
-        };
-        map.addOverlay(overlay);
-
-        var station_description = [{% for i in vectors %}
-          ['{{i[0]}}', '{{i[1]}}', '{{i[2]}}', '{{i[8]}}', '{{i[9]}}', '{{i[10]}}', '{{i[11]}}', '{{i[12]}}'],
-          {% endfor %}];
-        var description_name = [{% for i in vectors %}
-          '{{i[0]}}',
-          {% endfor %}];
-
-        map.on('click', function(evt) {
-          map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-            var descrp_index = description_name.indexOf(feature.getId());
-             if ( descrp_index > -1) {
-               var coordinate = evt.coordinate;
-               if (station_description[descrp_index][3] == 'nan') {
-                 content.innerHTML = '<p><b>' + station_description[descrp_index][0] + ': </b><br />Coordinates: ' +
-                 station_description[descrp_index][1] + 'º / ' + station_description[descrp_index][2] + 'º</p>';
-                 overlay.setPosition(coordinate);
-                 return
-               }
-               if (station_description[descrp_index][3] != 'nan') {
-                 content.innerHTML = '<p><b>' + station_description[descrp_index][0] + ': </b><br />Coordinates: ' +
-                 station_description[descrp_index][1] + 'º / ' + station_description[descrp_index][2] +
-                 'º<br />Ve: ' + station_description[descrp_index][3] + ' mm/year<br />Vn: ' + station_description[descrp_index][4] +
-                 ' mm/year<br />Vz: ' + station_description[descrp_index][5] + ' mm/year</p>';
-                 overlay.setPosition(coordinate);
-                 return
-               }
-             }
+          var pointssource = new ol.source.Vector({
+            features: pointsfeatures
           });
-        });
+          var PointsLayer = new ol.layer.Vector({
+            source: pointssource
+          });
 
-        /* --------------------------------------------------------
-        * Code for selecting the field figure
-        -------------------------------------------------------- */
-        function add_colorbar(elementId) {
-          var x = document.getElementById(elementId);
-          x.style.display = "block";
-        }
-        function rm_colorbar(elementId) {
-          var x = document.getElementById(elementId);
-          x.style.display = "none";
-        }
-        window.onload = function() {
-          // run your script in here
+          /* *************************************************************
+          FIELD IMAGES
+          **************************************************************** */
+          // vertical vorticity image
+          var posarray = {{ fieldarea }};
+          var fieldpos1 = ol.proj.fromLonLat([posarray[0], posarray[2]]);
+          var fieldpos2 = ol.proj.fromLonLat([posarray[1], posarray[3]]);
 
-          var selectElement = document.getElementById('select_field_type');
+          var verticalvorticityLayer = new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+              url: '/mapdata/wz_figure?date={{ herenow }}',
+              projection: 'EPSG:3857',
+              imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
+            }),
+            opacity:0.5
+          });
 
-          var changeField = function() {
-            var selected_variable = selectElement.value;
-            if (selected_variable == 'Vertical Vorticity') {
-              // maps
-              map.addLayer(verticalvorticityLayer);
-              map.removeLayer(cinematicvorticityLayer);
-              map.removeLayer(stretchingLayer);
+          // cinematic vorticity image
+          var cinematicvorticityLayer = new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+              url: '/mapdata/wk_figure?date={{ herenow }}',
+              projection: 'EPSG:3857',
+              imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
+            }),
+            opacity:0.5
+          });
 
-              //colorbars
-              add_colorbar('wz_colorbar');
-              rm_colorbar('wk_colorbar');
-              rm_colorbar('s2_colorbar');
-            } else if (selected_variable == 'Cinematic Vorticity') {
-              // maps
-              map.addLayer(cinematicvorticityLayer);
-              map.removeLayer(verticalvorticityLayer);
-              map.removeLayer(stretchingLayer);
+          // stretching magnitude image
+          var stretchingLayer = new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+              url: '/mapdata/s2_figure?date={{ herenow }}',
+              projection: 'EPSG:3857',
+              imageExtent: [fieldpos1[0], fieldpos1[1], fieldpos2[0], fieldpos2[1]]
+            }),
+            opacity:0.5
+          });
 
-              //colorbars
-              rm_colorbar('wz_colorbar');
-              add_colorbar('wk_colorbar');
-              rm_colorbar('s2_colorbar');
-            } else if (selected_variable == 'Stretching Magnitude') {
-              map.addLayer(stretchingLayer);
-              map.removeLayer(verticalvorticityLayer);
-              map.removeLayer(cinematicvorticityLayer);
+          /* ************************************************************
+          Map Creations
+          ************************************************************** */
 
-              //colorbars
-              add_colorbar('s2_colorbar');
-              rm_colorbar('wz_colorbar');
-              rm_colorbar('wk_colorbar');
-            } else if (selected_variable == 'Hide') {
-              map.removeLayer(verticalvorticityLayer);
-              map.removeLayer(cinematicvorticityLayer);
-              map.removeLayer(stretchingLayer);
+          // url opentopomap: 'http://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png'
+          // url opencyclemap "https://{s}.tile.thunderforest.com/cycle/${z}/${x}/${y}.png?apikey=ab2ec8caac05494292c6ecea0e39fde1"
+          var map = new ol.Map({
+            target: 'map',
+            layers: [
+              new ol.layer.Tile({
+                source: new ol.source.OSM()
+              }),
+              PointsLayer
+            ],
+            controls: ol.control.defaults({
+              attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+                collapsible: false
+              })
+            }),
+            view: new ol.View({
+              center: center,
+              zoom: zoom,
+              rotation: rotation
+            })
+          });
 
-              //colorbars
-              rm_colorbar('wz_colorbar');
-              rm_colorbar('wk_colorbar');
-              rm_colorbar('s2_colorbar');
-            } else {
-            }
-          };
-          // onchange callback on the select element.
-          selectElement.onchange = changeField;
-          changeField();
-        }
+          cyclemap = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+              url: 'https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=ab2ec8caac05494292c6ecea0e39fde1'
+            })
+          });
+          map.addLayer(cyclemap)
 
-        /** ------------------------------------------------
-        Print Function
-        --------------------------------------------------- */
-        $(window).bind("load", function() {
-          document.getElementById('export-png').addEventListener('click', function() {
-            map.once('postcompose', function(event) {
-              var canvas = event.context.canvas;
-              if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
-              } else {
-                canvas.toBlob(function(blob) {
-                  saveAs(blob, 'map.png');
+          // Create the graticule component
+         var graticule = new ol.Graticule({
+           // the style to use for the lines, optional.
+           strokeStyle: new ol.style.Stroke({
+             color: 'rgba(120,120,120,0.5)',
+             width: 1,
+             lineDash: [0.5, 4]
+           }),
+           showLabels: true
+         });
+
+         graticule.setMap(map);
+
+         /* *********************************************************
+         Velocity Vectors
+         ************************************************************ */
+
+         // function for cut the input vector variable by its time
+         function select_arrows(arrows, ta1, ta2, ti, tf) {
+           new_arrows = [];
+           for ( i = 0; i < arrows.length; i++) {
+             if (ti <= ta2[i] && tf >= ta1[i]) {
+               new_arrows.push(arrows[i]);
+             }
+           }
+           return new_arrows
+         }
+
+         $(window).bind("load", function() {
+           var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
+           var arrows_points = [{% for i in vectors2plot %}
+                                 [ [{{i[0]}}, {{i[1]}}],
+                                 [{{i[0]}}+{{i[2]}}*arrow_scale,
+                                  {{i[1]}}+{{i[3]}}*arrow_scale]],
+                                  {% endfor %}];
+           var arrows_t1 = [{% for i in vectors2plot %}
+                              new Date("{{i[4]}}"),
+                          {% endfor %}];
+
+           var arrows_t2 = [{% for i in vectors2plot %}
+                              new Date("{{i[5]}}"),
+                          {% endfor %}];
+           var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
+
+           // get the start and final time for the vectors on the map
+           vplotstart = new Date(document.getElementById('vplotstart').value);
+           vplotend = new Date(document.getElementById('vplotend').value);
+           arrows_points = select_arrows(arrows_points, arrows_t1, arrows_t2,  vplotstart, vplotend);
+
+
+           var arrowStyleFunction = function(feature_arrow) {
+              var arrow_styles = [
+                // linestring
+                new ol.style.Style({
+                  stroke: new ol.style.Stroke({
+                    color: '#000000',
+                    width: 2
+                  })
+                })
+              ];
+              var lineStringsArray = feature_arrow.getGeometry().getLineStrings();
+              for (var i = 0; i < lineStringsArray.length; i++) {
+                lineStringsArray[i].forEachSegment(function(start, end) {
+                  var dx = end[0] - start[0];
+                  var dy = end[1] - start[1];
+                  var rotation = Math.atan2(dy, dx);
+                  arrow_styles.push(new ol.style.Style({
+                    geometry: new ol.geom.Point(end),
+                    image: new ol.style.Icon({
+                      src: "{{url_for('static', filename='images/arrow.png')}}",
+                      rotateWithView: false,
+                      rotation: -rotation
+                    })
+                  }));
                 });
               }
+              return arrow_styles;
+            };
+            var VelocityVectorSource = new ol.source.Vector({});
+            VelocityVectorLayer = new ol.layer.Vector({
+                                    source: VelocityVectorSource,
+                                    style: arrowStyleFunction
+                                  })
+
+
+            var arrows = new ol.geom.MultiLineString(arrows_points);
+            arrows.transform('EPSG:4326', 'EPSG:3857');
+            var VelocityVectorFeature = new ol.Feature({
+              name: "Vector Feature",
+              geometry: arrows,
+              style: arrowStyleFunction
             });
-            map.renderSync();
-           });
-         }
-      );
-      </script>
+            VelocityVectorSource.addFeature(VelocityVectorFeature);
+            map.addLayer(VelocityVectorLayer)
+
+          // refresh velocity vectors scale when zoom change
+          map.getView().on('change:resolution', function(){
+            var arrow_scale = 1/Math.pow(map.getView().getZoom(), 2);
+            var arrows_points = [{% for i in vectors2plot %}
+                                  [ [{{i[0]}}, {{i[1]}}],
+                                  [{{i[0]}}+({{i[2]}}*arrow_scale),
+                                   {{i[1]}}+({{i[3]}}*arrow_scale)]],
+              {% endfor %}];
+            vplotstart = new Date(document.getElementById('vplotstart').value);
+            vplotend = new Date(document.getElementById('vplotend').value);
+            arrows_points = select_arrows(arrows_points, arrows_t1, arrows_t2, vplotstart, vplotend);
+            var arrows = new ol.geom.MultiLineString(arrows_points);
+            arrows.transform('EPSG:4326', 'EPSG:3857');
+            VelocityVectorFeature.setGeometry(arrows);
+          });
+        });
+
+          /* *********************************************************
+          Map Pop Up
+          ************************************************************ */
+          /**
+         * Elements that make up the popup.
+         */
+          var container = document.getElementById('popup');
+          var content = document.getElementById('popup-content');
+          var closer = document.getElementById('popup-closer');
+
+          /**
+         * Create an overlay to anchor the popup to the map.
+         */
+          var overlay = new ol.Overlay({
+            element: container,
+            autoPan: true,
+            autoPanAnimation: {
+              duration: 250
+            }
+          });
+
+          /**
+         * Add a click handler to hide the popup.
+         * @return {boolean} Don't follow the href.
+         */
+          closer.onclick = function() {
+            overlay.setPosition(undefined);
+            closer.blur();
+            return false;
+          };
+          map.addOverlay(overlay);
+
+          var station_description = [{% for i in vectors %}
+            ['{{i[0]}}', '{{i[1]}}', '{{i[2]}}', '{{i[8]}}', '{{i[9]}}', '{{i[10]}}', '{{i[11]}}', '{{i[12]}}'],
+            {% endfor %}];
+          var description_name = [{% for i in vectors %}
+            '{{i[0]}}',
+            {% endfor %}];
+
+          map.on('click', function(evt) {
+            map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+              var descrp_index = description_name.indexOf(feature.getId());
+               if ( descrp_index > -1) {
+                 var coordinate = evt.coordinate;
+                 if (station_description[descrp_index][3] == 'nan') {
+                   content.innerHTML = '<p><b>' + station_description[descrp_index][0] + ': </b><br />Coordinates: ' +
+                   station_description[descrp_index][1] + 'º / ' + station_description[descrp_index][2] + 'º</p>';
+                   overlay.setPosition(coordinate);
+                   return
+                 }
+                 if (station_description[descrp_index][3] != 'nan') {
+                   content.innerHTML = '<p><b>' + station_description[descrp_index][0] + ': </b><br />Coordinates: ' +
+                   station_description[descrp_index][1] + 'º / ' + station_description[descrp_index][2] +
+                   'º<br />Ve: ' + station_description[descrp_index][3] + ' mm/year<br />Vn: ' + station_description[descrp_index][4] +
+                   ' mm/year<br />Vz: ' + station_description[descrp_index][5] + ' mm/year</p>';
+                   overlay.setPosition(coordinate);
+                   return
+                 }
+               }
+            });
+          });
+
+          /* --------------------------------------------------------
+          * Code for selecting the field figure
+          -------------------------------------------------------- */
+          function add_colorbar(elementId) {
+            var x = document.getElementById(elementId);
+            x.style.display = "block";
+          }
+          function rm_colorbar(elementId) {
+            var x = document.getElementById(elementId);
+            x.style.display = "none";
+          }
+          window.onload = function() {
+            // run your script in here
+
+            var selectElement = document.getElementById('select_field_type');
+
+            var changeField = function() {
+              var selected_variable = selectElement.value;
+              if (selected_variable == 'Vertical Vorticity') {
+                // maps
+                map.addLayer(verticalvorticityLayer);
+                map.removeLayer(cinematicvorticityLayer);
+                map.removeLayer(stretchingLayer);
+
+                //colorbars
+                add_colorbar('wz_colorbar');
+                rm_colorbar('wk_colorbar');
+                rm_colorbar('s2_colorbar');
+              } else if (selected_variable == 'Cinematic Vorticity') {
+                // maps
+                map.addLayer(cinematicvorticityLayer);
+                map.removeLayer(verticalvorticityLayer);
+                map.removeLayer(stretchingLayer);
+
+                //colorbars
+                rm_colorbar('wz_colorbar');
+                add_colorbar('wk_colorbar');
+                rm_colorbar('s2_colorbar');
+              } else if (selected_variable == 'Stretching Magnitude') {
+                map.addLayer(stretchingLayer);
+                map.removeLayer(verticalvorticityLayer);
+                map.removeLayer(cinematicvorticityLayer);
+
+                //colorbars
+                add_colorbar('s2_colorbar');
+                rm_colorbar('wz_colorbar');
+                rm_colorbar('wk_colorbar');
+              } else if (selected_variable == 'Hide') {
+                map.removeLayer(verticalvorticityLayer);
+                map.removeLayer(cinematicvorticityLayer);
+                map.removeLayer(stretchingLayer);
+
+                //colorbars
+                rm_colorbar('wz_colorbar');
+                rm_colorbar('wk_colorbar');
+                rm_colorbar('s2_colorbar');
+              } else {
+              }
+            };
+            // onchange callback on the select element.
+            selectElement.onchange = changeField;
+            changeField();
+          }
+
+          /** ------------------------------------------------
+          Print Function
+          --------------------------------------------------- */
+          $(window).bind("load", function() {
+            document.getElementById('export-png').addEventListener('click', function() {
+              map.once('postcompose', function(event) {
+                var canvas = event.context.canvas;
+                if (navigator.msSaveBlob) {
+                  navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+                } else {
+                  canvas.toBlob(function(blob) {
+                    saveAs(blob, 'map.png');
+                  });
+                }
+              });
+              map.renderSync();
+             });
+           }
+        );
+        </script>
+        </div>
       </div>
-    </div>
-    <div class="five columns">
-      <div class="tabbar">
-         <button class="tabbar-button" onclick="openTab('GNSS', 'tabs1')">GNSS</button>
-         <button class="tabbar-button" onclick="openTab('FieldAnalysis', 'tabs1')">Field Analysis</button>
-         <button class="tabbar-button" onclick="openTab('MapOptions', 'tabs1')">Map Options</button>
-         <hr>
-      </div>
-      <div id="GNSS" class="tabs1">
-      <form action="{{url_for('select')}}", method="post">
-        <h4>Latitude</h4>
-        <table class="u-full-width">
-          <tbody>
-            <tr>
-              <td><label for="latmin">Minimum</label>
-              <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45"></td>
-              <td><label for="latmax">Maximum</label>
-              <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35"></td>
-            </tr>
-          </tbody>
-        </table>
-        <h4>Longitude</h4>
-        <table  class="u-full-width">
-          <tbody>
-            <tr>
-              <td><label for="lonmin">Minimum</label>
-                <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76"></td>
-              <td><label for="lonmax">Maximum</label>
-                <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64"></td>
-            </tr>
-          </tbody>
-        </table>
-        <h4>Time range (yyyy-mm-dd)</h4>
-        <table  class="u-full-width">
-          <tbody>
-            <tr>
-              <td><label for="inicial">Start</label>
-                  <input type="text" placeholder="t_inicial" name="t_inicial" value="2005-01-01"></td>
-              <td><label for="final">End</label>
-                  <input type="text" placeholder="t_final" name="t_final" value="2016-12-31"></td>
-            </tr>
-          </tbody>
-        </table>
-        <input class="button-primary" name="btn_select" value="Select" type="submit">
-      </form>
-      </div>
-      <div id="FieldAnalysis" class="tabs1" style="display:none">
-        <form action="{{url_for('field')}}", method="post">
+      <div class="five columns">
+        <div class="tabbar">
+           <button class="tabbar-button" onclick="openTab('GNSS', 'tabs1')">GNSS</button>
+           <button class="tabbar-button" onclick="openTab('FieldAnalysis', 'tabs1')">Field Analysis</button>
+           <button class="tabbar-button" onclick="openTab('MapOptions', 'tabs1')">Map Options</button>
+           <hr>
+        </div>
+        <div id="GNSS" class="tabs1">
+        <form action="{{url_for('select')}}", method="post">
           <h4>Latitude</h4>
-          <table  class="u-full-width">
+          <table class="u-full-width">
             <tbody>
               <tr>
                 <td><label for="latmin">Minimum</label>
-                    <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45"></td>
+                <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45"></td>
                 <td><label for="latmax">Maximum</label>
-                    <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35"></td>
+                <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35"></td>
               </tr>
             </tbody>
           </table>
@@ -458,9 +430,9 @@
             <tbody>
               <tr>
                 <td><label for="lonmin">Minimum</label>
-                    <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76"></td>
+                  <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76"></td>
                 <td><label for="lonmax">Maximum</label>
-                    <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64"></td>
+                  <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64"></td>
               </tr>
             </tbody>
           </table>
@@ -470,64 +442,103 @@
               <tr>
                 <td><label for="inicial">Start</label>
                     <input type="text" placeholder="t_inicial" name="t_inicial" value="2005-01-01"></td>
-              <td><label for="final">End</label>
-                  <input type="text" placeholder="t_final" name="t_final" value="2016-12-31"></td>
+                <td><label for="final">End</label>
+                    <input type="text" placeholder="t_final" name="t_final" value="2016-12-31"></td>
               </tr>
             </tbody>
           </table>
-          <h4>Methodology</h4>
-          <input type="number" name="grid" value="1000" max="100000" min="100"> Grid density(100000 - 100)
-          <br />
-          <input type="number" name="alfa" value="10000" max="300000" min="100"> Alfa(300000 - 10000)
-          <input style="float:right" class="button-primary" name="btn_field" value="Plot" type="submit">
+          <input class="button-primary" name="btn_select" value="Select" type="submit">
         </form>
-      </div>
-      <div id="MapOptions" class="tabs1" style="display:none">
-        <label>Variable to plot</label>
-        <select id="select_field_type">
-          <option value="Vertical Vorticity" selected>Vertical Vorticity</option>
-          <option value="Cinematic Vorticity">Cinematic Vorticity</option>
-          <option value="Stretching Magnitude">Stretching Magnitude</option>
-          <option value="Eigenvectors">Hide</option>
-        </select>
-        <label>Velocity Plot Time Interval</label>
-        <table  class="u-full-width">
-          <tbody>
-            <tr>
-              <td><label for="vstart">Start</label>
-                  <input id="vplotstart" type="text" placeholder="t_inicial" name="vstart" value="2005-01-01"></td>
-              <td><label for="vend">End</label>
-                  <input id="vplotend" type="text" placeholder="t_final" name="vend" value="2016-12-31"></td>
-            </tr>
-          </tbody>
-        </table>
-        <form action="{{url_for('select_db')}}", method="post">
-        <label>Select GNSS Database</label>
-        <h6>(Deletes previus files)</h6>
-        <select name="select_db">
-          {% for db in databases %}
-          <option value="{{db}}" selected>{{db}}</option>
-          {% endfor %}
-        </select>
-          <input class="button-primary" name="btn_db" value="Select DB" type="submit">
-      </form>
-        <input id="export-png" class="button-primary" value="Download Map PNG" type="submit"/>
-      </div>
-  </div>
-</div>
-<br>
-<div class="row">
-  <div class="ten columns">
-    <div class="tabbar">
-      <button class="tabbar-button" onclick="openTab('Model', 'tabs2')">Model tools</button>
-      <button class="tabbar-button" onclick="openTab('Vectors', 'tabs2')">Vectors</button>
+        </div>
+        <div id="FieldAnalysis" class="tabs1" style="display:none">
+          <form action="{{url_for('field')}}", method="post">
+            <h4>Latitude</h4>
+            <table  class="u-full-width">
+              <tbody>
+                <tr>
+                  <td><label for="latmin">Minimum</label>
+                      <input type="number" name="latmin" min="-90" max="90" step="0.1" placeholder="latmin" value="-45"></td>
+                  <td><label for="latmax">Maximum</label>
+                      <input type="number" name="latmax" min="-90" max="90" step="0.1" placeholder="latmax" value="-35"></td>
+                </tr>
+              </tbody>
+            </table>
+            <h4>Longitude</h4>
+            <table  class="u-full-width">
+              <tbody>
+                <tr>
+                  <td><label for="lonmin">Minimum</label>
+                      <input type="number" min="-180" max="180" step="0.1" placeholder="lonmin" name="lonmin" value="-76"></td>
+                  <td><label for="lonmax">Maximum</label>
+                      <input type="number" min="-180" max="180" step="0.1" placeholder="lonmax" name="lonmax" value="-64"></td>
+                </tr>
+              </tbody>
+            </table>
+            <h4>Time range (yyyy-mm-dd)</h4>
+            <table  class="u-full-width">
+              <tbody>
+                <tr>
+                  <td><label for="inicial">Start</label>
+                      <input type="text" placeholder="t_inicial" name="t_inicial" value="2005-01-01"></td>
+                <td><label for="final">End</label>
+                    <input type="text" placeholder="t_final" name="t_final" value="2016-12-31"></td>
+                </tr>
+              </tbody>
+            </table>
+            <h4>Methodology</h4>
+            <input type="number" name="grid" value="1000" max="100000" min="100"> Grid density(100000 - 100)
+            <br />
+            <input type="number" name="alfa" value="10000" max="300000" min="100"> Alfa(300000 - 10000)
+            <input style="float:right" class="button-primary" name="btn_field" value="Plot" type="submit">
+          </form>
+        </div>
+        <div id="MapOptions" class="tabs1" style="display:none">
+          <label>Variable to plot</label>
+          <select id="select_field_type">
+            <option value="Vertical Vorticity" selected>Vertical Vorticity</option>
+            <option value="Cinematic Vorticity">Cinematic Vorticity</option>
+            <option value="Stretching Magnitude">Stretching Magnitude</option>
+            <option value="Hide">Hide</option>
+          </select>
+          <label>Velocity Plot Time Interval</label>
+          <table  class="u-full-width">
+            <tbody>
+              <tr>
+                <td><label for="vstart">Start</label>
+                    <input id="vplotstart" type="text" placeholder="t_inicial" name="vstart" value="2005-01-01"></td>
+                <td><label for="vend">End</label>
+                    <input id="vplotend" type="text" placeholder="t_final" name="vend" value="2016-12-31"></td>
+              </tr>
+            </tbody>
+          </table>
+          <form action="{{url_for('select_db')}}", method="post">
+          <label>Select GNSS Database</label>
+          <h6>(Deletes previus files)</h6>
+          <select name="select_db">
+            {% for db in databases %}
+            <option value="{{db}}" selected>{{db}}</option>
+            {% endfor %}
+          </select>
+            <input class="button-primary" name="btn_db" value="Select DB" type="submit">
+        </form>
+          <input id="export-png" class="button-primary" value="Download Map PNG" type="submit"/>
+        </div>
     </div>
   </div>
-  <div class="two columns">
-    <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" type="submit" value="Download Data"/>
-  </div>
-  <hr>
 </div>
+<div id="0_Stations" class="tabs0" style="display:none">
+  <div class="row">
+    <div class="ten columns">
+      <div class="tabbar">
+        <button class="tabbar-button" onclick="openTab('Model', 'tabs2')">Model tools</button>
+        <button class="tabbar-button" onclick="openTab('Vectors', 'tabs2')">Vectors</button>
+      </div>
+    </div>
+    <div class="two columns">
+      <input class="button-primary" onclick="window.open('download?date={{ herenow }}','_blank')" type="submit" value="Download Data"/>
+    </div>
+    <hr>
+  </div>
   <div id="Model" class="tabs2">
     <table class="u-full-width">
       <thead>
@@ -605,5 +616,4 @@
     </div>
   </div>
 </div>
-
 {% endblock %}

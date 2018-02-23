@@ -333,16 +333,15 @@ def calc_vector():
             middle = MiddleLayer(session['username'])
             middle.middle_vector(station, tv1, tv2, vector_file,
                                  model_list_file, paramjsonfile)
-            flash('{} vector sucessfull'.format(station))
-    except (ValueError, TimeSeriesError) as e:
-        if e is ValueError:
-            log = Logger()
-            log.logger.error(PrintException())
-            flash('Start time should be lower than the end time')
-        elif e is TimeSeriesError:
-            log = Logger()
-            log.logger.error(PrintException())
-            flash('Time Series empty in the selected time')
+            flash('{} vector operations ended'.format(station))
+    except ValueError as e:
+        log = Logger()
+        log.logger.error(PrintException())
+        flash('Error: Start time should be lower than the end time')
+    except TimeSeriesError as e:
+        log = Logger()
+        log.logger.error(PrintException())
+        flash('Error: Time Series empty in the selected time')
     return redirect(url_for('homepage'))
 
 
@@ -515,7 +514,7 @@ def select_db():
         if request.method == 'POST' and request.form['btn_db'] == 'Select DB':
             selected_db = request.form['select_db']
             Config.config['PATH']['general_solution'] = "{}general_solution_{}/".format(output_dir, selected_db)
-            Config.config['PATH']['GPSdata'] = "txtfiles_{}".format(selected_db)
+            Config.config['PATH']['GPSdata'] = "txtfiles_{}/".format(selected_db)
             Config.config['PATH']['ListaGPS'] = "station_list_{}.txt".format(selected_db)
 
             # save changes on ini file

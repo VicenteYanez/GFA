@@ -68,7 +68,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     a velocity vector, depending of the . And finally saves the
     the vector in vectors.txt file.
     Input
-    aux: Its value depends of the vector_type variable.
+    aux: It is a value that depends of the vector_type variable.
         If it is "fit":
             Time range for the lineal fit (list of lenght 2)
         If it is "tangent":
@@ -96,7 +96,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
 
         # Si la serie no contiene el tiempo t, regresa falso
         if modelo[0][len(modelo[0])-1] < float(trange[0]):
-            print('Error, station do not have the time {}'.format(t0))
+            print('Error, station do not have the time {}'.format(trange[0]))
             return False
 
         vector, c, err = fun_vector.fit(trange, modelo[0], modelo[1],
@@ -107,7 +107,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
         print("not implemented yet")
     else:
         print("vector type don't selected")
-        return
+        return False
 
     # si vector está vacio retornar false
     if vector is False:
@@ -137,7 +137,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
         # if there is no data saved previusly
         savedf.to_csv(vector_file, index=False)
 
-    return
+    return True
 
 
 def save_model(modelo, model_file):

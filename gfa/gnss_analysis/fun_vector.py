@@ -9,8 +9,10 @@ Colección de funciones para calcular un vector desde
 el modelo de trayectoria
 """
 
+
 class TimeSeriesError(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
 
 
 def fun_lineal(x, b, c):
