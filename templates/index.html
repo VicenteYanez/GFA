@@ -512,15 +512,15 @@
             </tbody>
           </table>
           <form action="{{url_for('select_db')}}", method="post">
-          <label>Select GNSS Database</label>
-          <h6>(Deletes previus files)</h6>
-          <select name="select_db">
-            {% for db in databases %}
-            <option value="{{db}}" selected>{{db}}</option>
-            {% endfor %}
-          </select>
-            <input class="button-primary" name="btn_db" value="Select DB" type="submit">
-        </form>
+            <label>Select GNSS Database</label>
+            <h6>(Deletes previus files)</h6>
+            <select name="select_db">
+              {% for db in databases %}
+              <option value="{{db}}" selected>{{db}}</option>
+              {% endfor %}
+            </select>
+              <input class="button-primary" name="btn_db" value="Select DB" type="submit">
+          </form>
           <input id="export-png" class="button-primary" value="Download Map PNG" type="submit"/>
         </div>
     </div>
