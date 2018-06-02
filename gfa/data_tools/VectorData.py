@@ -133,14 +133,14 @@ class VectorData():
                             (selectdf['start_time'] > timerange[0]) &
                             (selectdf['end_time'] < timerange[1])]
 
-        result1 = np.array(selectdf[['longitude', 'latitude', 'vector_e',
-                                    'vector_n']]).T
+        result1 = np.array(selectdf[['longitude', 'latitude',
+                                     'vector_e', 'vector_n']]).T
+        sta_array = np.array(selectdf['station'], dtype=bytes).astype(str)
         # result2 = np.array(selectdf[['start_time', 'end_time']]).T
         result21 = selectdf['start_time'].tolist()
         result22 = selectdf['end_time'].tolist()
 
-
-        return result1[0], result1[1], result1[2], result1[3], result21, result22
+        return sta_array, result1[0], result1[1], result1[2], result1[3], result21, result22
 
     def check_time(self, station, ti, tf):
         """
@@ -156,13 +156,14 @@ class VectorData():
         list_end = self.vecdf[self.vecdf['station'] == station][
             'end_time'].tolist()
 
-        old_times = np.array([list_start, list_end]).T
+        old_times = np.array([list_start, list_end]).T.tolist()
         print("old times: {}".format(old_times))
-        input_times = np.array([ti, tf]).T
+        input_times = np.array([ti, tf]).T.tolist()
         print("input times {}".format(input_times))
+
         new_times = []
         remove_times = []
-        # add the new input times to a list for calculation
+
         for times in input_times:
             if times not in old_times:
                 new_times.append(times)
@@ -171,7 +172,10 @@ class VectorData():
         for times in old_times:
             if times not in input_times:
                 remove_times.append(times)
+
         print("new times: {}".format(new_times))
+        print("remove times: {}".format(remove_times))
+
         return new_times, remove_times
 
     def remove_vector(self, station, times2remove):
@@ -180,7 +184,6 @@ class VectorData():
         """
         rmdf = copy.deepcopy(self.vecdf)
         for time2remove in times2remove:
-            print("remove times: {}".format(time2remove))
             rmdf = rmdf[(rmdf['station'] != station) |
                         (rmdf['start_time'] != time2remove[0]) |
                         (rmdf['end_time'] != time2remove[1])]

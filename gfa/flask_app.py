@@ -18,7 +18,7 @@ import numpy as np
 from gfa.log_config import Logger
 from gfa.MiddleLayer import MiddleLayer, load_model
 from gfa.load_param import Config
-from gfa.gnss_analysis.fun_vector import TimeSeriesError
+from gfa.errors import TimeSeriesError, TimeIntervalError
 
 
 def PrintException():
@@ -334,14 +334,14 @@ def calc_vector():
             middle.middle_vector(station, tv1, tv2, vector_file,
                                  model_list_file, paramjsonfile)
             flash('{} vector operations ended'.format(station))
-    except ValueError as e:
-        log = Logger()
-        log.logger.error(PrintException())
-        flash('Error: Start time should be lower than the end time')
     except TimeSeriesError as e:
         log = Logger()
         log.logger.error(PrintException())
         flash('Error: Time Series empty in the selected time')
+    except TimeIntervalError as e:
+        log = Logger()
+        log.logger.error(PrintException())
+        flash('Error: Start time should be lower than end time')
     return redirect(url_for('homepage'))
 
 
@@ -513,7 +513,7 @@ def select_db():
     try:
         if request.method == 'POST' and request.form['btn_db'] == 'Select DB':
             selected_db = request.form['select_db']
-            Config.config['PATH']['general_solution'] = "{}general_solution_{}/".format(output_dir, selected_db)
+            Config.config['PATH']['general_solution'] = "general_solution_{}/".format(selected_db)
             Config.config['PATH']['GPSdata'] = "txtfiles_{}/".format(selected_db)
             Config.config['PATH']['ListaGPS'] = "station_list_{}.txt".format(selected_db)
 

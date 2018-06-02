@@ -201,5 +201,6 @@ def tensor_figure(x, y, evalue, evector):
     plt.quiver(x, y, color='blue')  # oppose second vector
 
     # final details
+    ax.stock_img()
     ax.coastlines(resolution='10m')
     return fig

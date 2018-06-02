@@ -4,19 +4,16 @@
 import numpy as np
 from scipy.optimize import curve_fit
 
+from gfa.errors import TimeSeriesError
+
 """
 Colección de funciones para calcular un vector desde
 el modelo de trayectoria
 """
 
 
-class TimeSeriesError(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
 def fun_lineal(x, b, c):
-    return x * b + c
+    return x*b + c
 
 
 def tangente(ti, t, e, n, z):
@@ -71,7 +68,7 @@ def fit(intervalo, t, e, n, z):
     e = e[id_t]
     n = n[id_t]
     z = z[id_t]
-    if len(t) < 10:
+    if len(t) < 2:
         print("Estacion sin datos para calcular una vel media")
         raise TimeSeriesError
 

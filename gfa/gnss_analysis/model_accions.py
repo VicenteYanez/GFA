@@ -7,6 +7,7 @@ import json
 import numpy as np
 import pandas as pd
 
+from gfa.data_tools.auxfun import fractlist2dateobj
 from gfa.gnss_analysis import fun_vector
 from gfa.gnss_analysis.ModeloTrayectoria import ModeloTrayectoria
 
@@ -62,7 +63,7 @@ def build_model(data, param):
     return modelresult, residual
 
 
-def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
+def calc_vector(estacion, file_modelo, vector_file, vector_type, trange):
     """
     Method that calls call the functions for compute
     a velocity vector, depending of the . And finally saves the
@@ -80,31 +81,24 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
     # PEDIR VECTOR
     # ####################################################################
     if vector_type == 'tangent':
-        t0 = float(aux)
-
         # Si la serie no contiene el tiempo t, regresa falso
-        if modelo[0][len(modelo[0])-1] < float(t0):
-            print('Error, station do not have the time {}'.format(t0))
+        if modelo[0][len(modelo[0])-1] < float(trange):
+            print('Error, station do not have the time {}'.format(trange))
             return False
 
-        vector, c = fun_vector.tangente(t0, modelo[0], modelo[1],
+        vector, c = fun_vector.tangente(trange, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
-        t1 = t0
-        t2 = t0
-    elif vector_type == 'fit':
-        trange = aux
+        trange = [trange, trange]  # transfom it in a list to be saved in db
 
+    elif vector_type == 'fit':
         # Si la serie no contiene el tiempo t, regresa falso
-        if modelo[0][len(modelo[0])-1] < float(trange[0]):
+        if modelo[0][len(modelo[0])-1] < trange[0]:
             print('Error, station do not have the time {}'.format(trange[0]))
             return False
 
         vector, c, err = fun_vector.fit(trange, modelo[0], modelo[1],
                                         modelo[2], modelo[3])
-        t1 = trange[0]
-        t2 = trange[1]
-    elif vector_type == 'trending':
-        print("not implemented yet")
+
     else:
         print("vector type don't selected")
         return False
@@ -119,7 +113,7 @@ def calc_vector(estacion, file_modelo, vector_file, vector_type, aux=False):
                            'vector_e': [vector[0]], 'vector_n': [vector[1]],
                            'vector_z': [vector[2]], 'c_e': [c[0]],
                            'c_n': [c[1]], 'c_z': [c[2]],
-                           'start_time': [t1], 'end_time': [t2]})
+                           'start_time': [trange[0]], 'end_time': [trange[1]]})
     # order columns
     savedf = savedf[['station', 'vector_type', 'vector_e', 'vector_n',
                      'vector_z', 'c_e', 'c_n', 'c_z',

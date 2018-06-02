@@ -82,16 +82,16 @@ def plot(alias, station, model, vector):
 @cli.command()
 @click.option('--alias', default='default', help='identifier for your query')
 @click.option('--station', default="", help='Station name')
-@click.option('--type', default="tangent", help='Vector type, tangent or fit')
+@click.option('--vtype', default="tangent", help='Vector type, tangent or fit')
 @click.option('--period', default=[], help='Time or period of time, it has \
-to be a list')
-def vector(alias, station, type, period):
+to be a comma separated list')
+def vector(alias, station, vtype, period):
     """
     Script that calculates the displacement vector of one station
     in a certain time or period.
     """
     period = [float(s) for s in period.split(',')]
-    ts_vector.main(alias, station, type, period)
+    ts_vector.main(alias, station, vtype, period)
     return
 
 

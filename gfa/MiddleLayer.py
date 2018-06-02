@@ -1,19 +1,21 @@
 
 from datetime import datetime
-import time
 import os
+import sys
 import shutil
 import json
+import linecache
 
 import numpy as np
 from flask import flash
 import pandas as pd
 
 import gfa.log_config as log
+from gfa.errors import TimeIntervalError
 from gfa.load_param import Config
 from gfa.website_tools.figures import cardozo_vorticity
 from gfa.data_tools.VectorData import VectorData
-from gfa.data_tools.auxfun import convert_partial_year, datelist2strlist
+from gfa.data_tools.auxfun import convert_partial_year, datelist2strlist, toYearFraction
 
 
 """
@@ -27,20 +29,17 @@ output_dir = Config.config['PATH']['output_dir']
 os.chdir(output_dir)
 
 
-def toYearFraction(date):
-    def sinceEpoch(date):  # returns seconds since epoch
-        return time.mktime(date.timetuple())
-    s = sinceEpoch
+def PrintException():
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
 
-    year = date.year
-    startOfThisYear = datetime(year=year, month=1, day=1)
-    startOfNextYear = datetime(year=year+1, month=1, day=1)
-
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
-    fraction = yearElapsed/yearDuration
-
-    return date.year + fraction
+    msg = 'EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno,
+                                                       line.strip(), exc_obj)
+    return msg
 
 
 class MiddleLayer():
@@ -134,21 +133,29 @@ contact the admin')
     def middle_vector(self, station, ti, tf, vector_file, model_list_file,
                       paramjsonfile):
         """
-
+        Middle vector calculation function
         """
-        # ti and tf are a string with parenthesis, first of all
-        # we need to remove ir and turning they in a
-        # list of floats
+        # input variables ti and tf are a string with parenthesis,
+        # so we need to remove it and convert they in a list of floats
         res = False  # var that changes to true when a vector is calculated
-        if ti == '' or tf == '':
-            ti = []
-            tf = []
-            res = True
-        else:
-            ti = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
-                  for s in ti.split(',')]
-            tf = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
-                  for s in tf.split(',')]
+        # validate time values
+        try:
+            if ti == '' or tf == '':
+                ti = []
+                tf = []
+                res = True
+            else:
+                ti = [toYearFraction(datetime.strptime(s, "%Y-%m-%d"))
+                      for s in ti.split(',')]
+                tf = [toYearFraction(datetime.strptime(s, "%Y-%m-%d"))
+                      for s in tf.split(',')]
+        except ValueError as e:
+            log1 = log.Logger()
+            log1.logger.error(PrintException())
+            flash('Error: Invalid input, please check start and end time')
+            return
+
+        # obtain new and removed vector intervals
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
             tif, remove_times = vdata.check_time(station, ti, tf)
@@ -166,7 +173,8 @@ contact the admin')
             # check value of time
             # parameter vtype is for ts_vector() function
             if times[0] > times[1]:
-                raise ValueError
+                raise TimeIntervalError
+                continue
             elif times[0] == times[1]:
                 vtype = 'tangent'
             elif times[0] < times[1]:
@@ -191,8 +199,9 @@ output time')
 
             latlon, df = load_model(model_list_file)
             vdata = VectorData(vector_file)
-            x, y, ve, vn, tvmap1, tvmap2 = vdata.select(df, lon_range,
-                                                        lat_range, maptimerange)
+            sta, x, y, ve, vn, tvmap1, tvmap2 = vdata.select(df, lon_range,
+                                                             lat_range,
+                                                             maptimerange)
 
             tvmap1 = datelist2strlist(tvmap1)
             tvmap2 = datelist2strlist(tvmap2)
@@ -228,8 +237,8 @@ output time')
         # load vectors from file
         if os.path.isfile(vector_file):
             vdata = VectorData(vector_file)
-            x, y, ve, vn, tv1, tv2 = vdata.select(df, lon_range, lat_range,
-                                                  [ti, tf])
+            sta, x, y, ve, vn, tv1, tv2 = vdata.select(df, lon_range,
+                                                       lat_range, [ti, tf])
             if len(x) < 4:
                 flash('Error:There is not enough vectors in the selected time')
                 return
@@ -238,7 +247,9 @@ output time')
                 os.remove(pngfile)
             cardozo_vorticity(self.user_dir, x, y, ve, vn,
                               lat_range, lon_range, grid, alfa)
-
+            # save vectors used in vorticity
+            selected_vectors = '{}/selected_vectors.txt'.format(self.user_dir)
+            np.savetxt(selected_vectors, np.array([sta, x, y, ve, vn]).T,  fmt='%s')
             # save select param
             select_file = '{}/select_param.json'.format(self.user_dir)
             with open(select_file, mode='r', encoding='utf-8') as feedsjson:

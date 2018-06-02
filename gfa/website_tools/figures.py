@@ -102,14 +102,17 @@ def wk_figure(x, y, z):
 
     # plot grid
     zmax = z_mapa.max()
+    if zmax < 1:
+        zmax = 1
     cmap = LinearSegmentedColormap.from_list('mycmap',
                                              [(0, 'blue'),
-                                              (0.8/zmax, 'turquoise'),
-                                              (1.2/zmax, 'yellow'),
+                                              (0.5/zmax, 'turquoise'),
+                                              (0.8/zmax, 'yellow'),
                                               (1, 'red')], N=256)
     # colorbar scale
-    im = ax.pcolormesh(x_mapa, y_mapa, z_mapa, vmin=z_mapa.min(), vmax=zmax,
-                       cmap=cmap, transform=ccrs.PlateCarree(), alpha=1, zorder=1)
+    im = ax.pcolormesh(x_mapa, y_mapa, z_mapa, vmin=z_mapa.min(),
+                       vmax=z_mapa.max(), cmap=cmap, alpha=1, zorder=1,
+                       transform=ccrs.PlateCarree())
 
     cbfig = plt.figure()
     cbax = plt.axes(projection=ccrs.Mercator())
@@ -243,9 +246,11 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
     wz = wz*360  # to convert to degrees/year
     savefilewz = '{}/wz.txt'.format(dir_path)
     savefilewk = '{}/wk.txt'.format(dir_path)
+    savefile_s2 = '{}/s2.txt'.format(dir_path)
     np.savetxt(savefilewz, np.array([gridx, gridy, wz]).T,
                header='x y z(degrees/year)')
     np.savetxt(savefilewk, np.array([gridx, gridy, Wk]).T, header='x y wk')
+    np.savetxt(savefile_s2, np.array([gridx, gridy, S2]).T, header='x y s2')
 
     # plot histogram of values
     f, (ax1, ax2) = plt.subplots(2, figsize=(12, 8))
@@ -264,11 +269,11 @@ def cardozo_vorticity(dir_path, lon_gps, lat_gps, ve_gps, vn_gps,  lat_range,
                  transparent=True, pad_inches=0.)
     # cinematic vorticity figure
     fig2, cbfig_wk = wk_figure(gridx, gridy, Wk)
-    cbfig_wk.savefig("{}/wk_colorbar.png".format(dir_path), dpi=150,
-                     bbox_inches='tight', pad_inches=0, transparent=True)
     fname2 = "{}/wk_field.png".format(dir_path)
     fig2.savefig(fname2, dpi=500, edgecolor='k', bbox_inches='tight',
                  transparent=True, pad_inches=0.)
+    cbfig_wk.savefig("{}/wk_colorbar.png".format(dir_path), dpi=150,
+                     bbox_inches='tight', pad_inches=0, transparent=True)
     # cinematic vorticity figure
     fig3, cbfig_s = s_figure(gridx, gridy, S2)
     cbfig_s.savefig("{}/s2_colorbar.png".format(dir_path), dpi=150,

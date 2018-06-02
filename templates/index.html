@@ -554,15 +554,6 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>All the stations</td>
-          <td><input style="width:100%" type="text" name="poly_all" value=""></td>
-          <td><input style="width:100%" type="text" name="jump_all" value=""></td>
-          <td><input style="width:100%" type="text" name="fourier_all" value=""></td>
-          <td><input style="width:100%" type="text" name="logstart_all" value=""></td>
-          <td><input style="width:100%" type="text" name="logscale_all" value=""></td>
-          <td><button onclick="">Edit All</button></td>
-        </tr>
         {% for station in stations %}
         <tr>
           <form action="edit/{{ station[0] }}", method="post">
@@ -593,13 +584,6 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>All the stations</td>
-          <td></td>
-          <td><input style="width:100%" type="text" name="start_all" value=""></td>
-          <td><input style="width:100%" type="text" name="end_all" value=""></td>
-          <td><button style="width:100%" onclick="">Edit All</button></td>
-        </tr>
         {% for station in vectors %}
         <tr>
           <form action="{{url_for('calc_vector')}}", method="post">

@@ -77,7 +77,7 @@ def longstring2yearfraction(ls):
     Transform a string with dates in the format %Y-%m-%d separated
     by a comma to a list with the dates in year and fraction
     """
-    yrfr = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d")))
+    yrfr = [toYearFraction(datetime.strptime(s, "%Y-%m-%d"))
             for s in ls.split(',')]
     return yrfr
 
@@ -87,7 +87,7 @@ def list2yearfraction(l):
     Transform a list with string dates in the format %Y-%m-%d to a list with
     the dates in year and fraction
     """
-    yrfr = [float(toYearFraction(datetime.strptime(s, "%Y-%m-%d"))) for s in l]
+    yrfr = [toYearFraction(datetime.strptime(s, "%Y-%m-%d")) for s in l]
     return yrfr
 
 

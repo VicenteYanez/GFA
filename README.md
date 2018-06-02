@@ -9,7 +9,11 @@ The GNSS stations time series Data are not included in GFA.
 I am sorry if you read any misspells o grammatical error. English is my second lenguage and my skills are far from perfect.
 
 ## Andes 3DB
-For the chilean investigation proyect "Active Tectonics and Volcanism at the Southern", a web based GUI was made. The GUI was developed using Python Flask. It provides
+For the chilean investigation proyect "Active Tectonics and Volcanism at the Southern", a web based GUI was made. The GUI was developed using Python Flask. It provides an interface to
+1. Select the GNSS station by position
+2. Edit and calculate a trajectory model for each station
+3. Calculate velocity vectors for differents time intervals.
+4. Use this velocity vectors to calculate a velocity field and from this, visualizate the vorticity and streching field.
 
 Screenshot of the selection section. Here you can select the GNSS station you want to use.
 ![alt text](https://github.com/VicenteYanez/GFA/blob/develop/static/images/homepage1.png?raw=true)

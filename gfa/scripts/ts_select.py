@@ -30,10 +30,12 @@ def main(codigo, lon_min, lon_max, lat_min, lat_max, tmin, tmax):
 
     # path archivos
     ts_path = Config.config['PATH']['timeseries']
+    output_dir = Config.config['PATH']['output_dir']
     lista_gps = '{}{}'.format(ts_path, Config.config['PATH']['ListaGPS'])
     series_dir = '{}{}'.format(ts_path, Config.config['PATH']['GPSdata'])
     save_dir = Config.config['PATH']['output_dir']
-    generalsolution_dir = Config.config['PATH']['general_solution']
+    generalsolution_dir = '{}{}'.format(output_dir,
+                                        Config.config['PATH']['general_solution'])
     # optional: dir of the trajectory model
     model_dir = '{}Modelo/'.format(generalsolution_dir)
     m_ls = '{}resume.txt'.format(generalsolution_dir)
