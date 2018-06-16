@@ -1,3 +1,6 @@
+# JUNE 16, 2018 
+# Moved to https://gitlab.com/vicenteyanez/GFA
+
 # GNSS Field Analysis (GFA)
 
 My name is Vicente Yañez and I'm a geologist interested in computer science. GFA is a compilation of python's functions that I wrote for my internship in [Centro Sismológico Nacional](http://www.sismologia.cl/) (CSN), during my undergraduate thesis and that I am still developing it.
